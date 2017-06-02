@@ -14,7 +14,7 @@ public class ViewCameraImpl implements IViewCamera {
 
 	@Override
 	public void addRotations(float yaw, int pitch) {
-		this.camera.setAngles(yaw, pitch);
+		this.camera.setLocationAndAngles(this.getX(), this.getY(), this.getZ(), yaw, pitch);
 	}
 
 	@Override
@@ -61,17 +61,16 @@ public class ViewCameraImpl implements IViewCamera {
 
 	@Override
 	public IBlockAccess getBlockData() {
-		return this.camera.worldObj;
+		return this.camera.world;
 	}
 
 	@Override
 	public boolean chunkExists(int x, int z) {
-		return !camera.worldObj.getChunkFromBlockCoords(x, z).isEmpty();
+		return !camera.world.getChunkFromChunkCoords(x, z).isEmpty();
 	}
 
 	@Override
 	public boolean chunkLevelsExist(int x, int z, int yl1, int yl2) {
-		return !camera.worldObj.getChunkFromBlockCoords(x, z).getAreLevelsEmpty(yl1, yl2);
+		return !camera.world.getChunkFromChunkCoords(x, z).getAreLevelsEmpty(yl1, yl2);
 	}
-
 }

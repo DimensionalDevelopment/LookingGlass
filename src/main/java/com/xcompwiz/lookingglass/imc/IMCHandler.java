@@ -5,12 +5,11 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.xcompwiz.lookingglass.log.LoggerUtils;
-
-import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
+import net.minecraftforge.fml.common.event.FMLInterModComms;
 
 public class IMCHandler {
 	public interface IMCProcessor {
-		public void process(IMCMessage message);
+		public void process(FMLInterModComms.IMCMessage message);
 	}
 
 	private static Map<String, IMCProcessor>	processors	= new HashMap<String, IMCProcessor>();
@@ -23,8 +22,8 @@ public class IMCHandler {
 		processors.put(key.toLowerCase(), processor);
 	}
 
-	public static void process(ImmutableList<IMCMessage> messages) {
-		for (IMCMessage message : messages) {
+	public static void process(ImmutableList<FMLInterModComms.IMCMessage> messages) {
+		for (FMLInterModComms.IMCMessage message : messages) {
 			String key = message.key.toLowerCase();
 			IMCProcessor process = processors.get(key);
 			if (process == null) {

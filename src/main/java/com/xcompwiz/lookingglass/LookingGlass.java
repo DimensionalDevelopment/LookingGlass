@@ -13,8 +13,6 @@ import com.xcompwiz.lookingglass.command.CommandCreateView;
 import com.xcompwiz.lookingglass.core.CommonProxy;
 import com.xcompwiz.lookingglass.core.LookingGlassForgeEventHandler;
 import com.xcompwiz.lookingglass.imc.IMCHandler;
-import com.xcompwiz.lookingglass.network.LookingGlassPacketManager;
-import com.xcompwiz.lookingglass.network.ServerPacketDispatcher;
 import com.xcompwiz.lookingglass.network.packet.PacketChunkInfo;
 import com.xcompwiz.lookingglass.network.packet.PacketCloseView;
 import com.xcompwiz.lookingglass.network.packet.PacketCreateView;
@@ -26,46 +24,41 @@ import com.xcompwiz.lookingglass.network.packet.PacketWorldInfo;
 import com.xcompwiz.lookingglass.proxyworld.LookingGlassEventHandler;
 import com.xcompwiz.lookingglass.proxyworld.ModConfigs;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLInterModComms.IMCEvent;
-import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.common.event.FMLServerStoppedEvent;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.*;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.relauncher.Side;
 
 @Mod(modid = LookingGlass.MODID, name = "LookingGlass", version = LookingGlass.VERSION)
 public class LookingGlass {
 	public static final String	MODID	= "LookingGlass";
 	public static final String	VERSION	= "@VERSION@";
 
-	@Instance(LookingGlass.MODID)
+	public SimpleNetworkWrapper INSTANCE;
+
+	@Mod.Instance(LookingGlass.MODID)
 	public static LookingGlass	instance;
 
 	@SidedProxy(clientSide = "com.xcompwiz.lookingglass.client.ClientProxy", serverSide = "com.xcompwiz.lookingglass.core.CommonProxy")
 	public static CommonProxy	sidedProxy;
 
-	@EventHandler
+	@Mod.EventHandler
 	public void preinit(FMLPreInitializationEvent event) {
 		//Initialize the packet handling
-		LookingGlassPacketManager.registerPacketHandler(new PacketCreateView(), (byte) 10);
-		LookingGlassPacketManager.registerPacketHandler(new PacketCloseView(), (byte) 11);
-		LookingGlassPacketManager.registerPacketHandler(new PacketWorldInfo(), (byte) 100);
-		LookingGlassPacketManager.registerPacketHandler(new PacketChunkInfo(), (byte) 101);
-		LookingGlassPacketManager.registerPacketHandler(new PacketTileEntityNBT(), (byte) 102);
-		LookingGlassPacketManager.registerPacketHandler(new PacketRequestWorldInfo(), (byte) 200);
-		LookingGlassPacketManager.registerPacketHandler(new PacketRequestChunk(), (byte) 201);
-		LookingGlassPacketManager.registerPacketHandler(new PacketRequestTE(), (byte) 202);
+		INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
 
-		LookingGlassPacketManager.bus = NetworkRegistry.INSTANCE.newEventDrivenChannel(LookingGlassPacketManager.CHANNEL);
-		LookingGlassPacketManager.bus.register(new LookingGlassPacketManager());
+		INSTANCE.registerMessage(PacketCreateView.Handler.class, PacketCreateView.class, 10, Side.CLIENT);
+		INSTANCE.registerMessage(PacketCloseView.Handler.class, PacketCloseView.class, 11, Side.CLIENT);
+		INSTANCE.registerMessage(PacketWorldInfo.Handler.class, PacketWorldInfo.class, 100, Side.SERVER);
+		INSTANCE.registerMessage(PacketChunkInfo.Handler.class, PacketChunkInfo.class, 101, Side.SERVER);
+		INSTANCE.registerMessage(PacketTileEntityNBT.Handler.class, PacketTileEntityNBT.class, 102, Side.SERVER);
+		INSTANCE.registerMessage(PacketRequestWorldInfo.Handler.class, PacketRequestWorldInfo.class, 200, Side.CLIENT);
+		INSTANCE.registerMessage(PacketRequestChunk.Handler.class, PacketRequestChunk.class, 201, Side.CLIENT);
+		INSTANCE.registerMessage(PacketRequestTE.Handler.class, PacketRequestTE.class, 202, Side.CLIENT);
 
 		// Load our basic configs
 		ModConfigs.loadConfigs(new Configuration(event.getSuggestedConfigurationFile()));
@@ -81,7 +74,7 @@ public class LookingGlass {
 		APIProviderImpl.init();
 	}
 
-	@EventHandler
+	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		// Our one and only entity.
 		EntityRegistry.registerModEntity(com.xcompwiz.lookingglass.entity.EntityPortal.class, "lookingglass.portal", 216, this, 64, 10, false);
@@ -89,29 +82,20 @@ public class LookingGlass {
 		sidedProxy.init();
 	}
 
-	@EventHandler
-	public void handleIMC(IMCEvent event) {
+	@Mod.EventHandler
+	public void handleIMC(FMLInterModComms.IMCEvent event) {
 		// Catch IMC messages and send them off to our IMC handler
-		ImmutableList<IMCMessage> messages = event.getMessages();
+		ImmutableList<FMLInterModComms.IMCMessage> messages = event.getMessages();
 		IMCHandler.process(messages);
 	}
 
-	@EventHandler
+	@Mod.EventHandler
 	public void postinit(FMLPostInitializationEvent event) {}
 
-	@EventHandler
+	@Mod.EventHandler
 	public void serverStart(FMLServerStartingEvent event) {
 		MinecraftServer mcserver = event.getServer();
 		// Register commands
 		((ServerCommandManager) mcserver.getCommandManager()).registerCommand(new CommandCreateView());
-		// Start up the packet dispatcher we use for throttled data to client.
-		ServerPacketDispatcher.getInstance().start(); //Note: This might need to be preceded by a force init of the ServerPacketDispatcher.  Doesn't seem to currently have any issues, though.
-	}
-
-	@EventHandler
-	public void serverStop(FMLServerStoppedEvent event) {
-		// Shutdown our throttled packet dispatcher
-		ServerPacketDispatcher.getInstance().halt();
-		ServerPacketDispatcher.shutdown();
 	}
 }

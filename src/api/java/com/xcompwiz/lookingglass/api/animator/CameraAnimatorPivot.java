@@ -1,7 +1,8 @@
 package com.xcompwiz.lookingglass.api.animator;
 
 import net.minecraft.block.Block;
-import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
 import com.xcompwiz.lookingglass.api.view.IViewCamera;
@@ -18,7 +19,7 @@ public class CameraAnimatorPivot implements ICameraAnimator {
 	private static final int[]		defaults	= { 1, 3 };
 
 	private final IViewCamera		camera;
-	private ChunkCoordinates		target;
+	private BlockPos				target;
 
 	private boolean					positionSet	= false;
 
@@ -35,7 +36,7 @@ public class CameraAnimatorPivot implements ICameraAnimator {
 	}
 
 	@Override
-	public void setTarget(ChunkCoordinates target) {
+	public void setTarget(BlockPos target) {
 		this.target = target;
 		positionSet = false;
 	}
@@ -127,7 +128,7 @@ public class CameraAnimatorPivot implements ICameraAnimator {
 		}
 		for (int j = -distance; j <= distance; ++j) {
 			for (int k = -distance; k <= distance; ++k) {
-				if (!camera.getBlockData().isAirBlock(xCenter + j, yCenter + up, zCenter + k)) return false;
+				if (!camera.getBlockData().isAirBlock(new BlockPos(xCenter + j, yCenter + up, zCenter + k))) return false;
 			}
 		}
 		return true;
@@ -144,29 +145,28 @@ public class CameraAnimatorPivot implements ICameraAnimator {
 		int yl = (y + 1) << 4;
 		for (int i = 0; i < 15; i++)
 			for (int j = 0; j < 15; j++)
-				if (!isBlockNormalCube(camera.getBlockData(), x2 + i, y2, z2 + i)) return false;
+				if (!isBlockNormalCube(camera.getBlockData(), new BlockPos(x2 + i, y2, z2 + i))) return false;
 		if (camera.chunkLevelsExist(x, z, yl, yl + 15)) return true;
 		return false;
 	}
 
-	private boolean isBlockNormalCube(IBlockAccess blockData, int x, int y, int z) {
-		Block block = blockData.getBlock(x, y, z);
-		return block.isNormalCube(blockData, x, y, z);
+	private boolean isBlockNormalCube(IBlockAccess blockData, BlockPos pos) {
+		return blockData.getBlockState(pos).isBlockNormalCube();
 	}
 
 	private void checkCameraY() {
-		int x = target.posX;
-		int y = target.posY;
-		int z = target.posZ;
+		int x = target.getX();
+		int y = target.getY();
+		int z = target.getZ();
 		int yBackup = y;
 		if (camera.chunkExists(x, z)) {
-			if (camera.getBlockData().getBlock(x, y, z).getBlocksMovement(camera.getBlockData(), x, y, z)) {
-				while (y > 0 && camera.getBlockData().getBlock(x, --y, z).getBlocksMovement(camera.getBlockData(), x, y, z))
+			if (camera.getBlockData().getBlockState(new BlockPos(x, y, z)).getBlock().isPassable(camera.getBlockData(), new BlockPos(x, y, z))) {
+				while (y > 0 && camera.getBlockData().getBlockState(new BlockPos(x, --y, z)).getBlock().isPassable(camera.getBlockData(), new BlockPos(x, y, z)))
 					;
 				if (y == 0) y = yBackup;
 				else y += 2;
 			} else {
-				while (y < 256 && !camera.getBlockData().getBlock(x, ++y, z).getBlocksMovement(camera.getBlockData(), x, y, z))
+				while (y < 256 && !camera.getBlockData().getBlockState(new BlockPos(x, ++y, z)).getBlock().isPassable(camera.getBlockData(), new BlockPos(x, y, z)))
 					;
 				if (y == 256) y = yBackup;
 				else ++y;

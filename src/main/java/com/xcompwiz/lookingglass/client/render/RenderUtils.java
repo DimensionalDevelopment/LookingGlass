@@ -4,11 +4,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.Tessellator;
 
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class RenderUtils {
 
@@ -60,7 +59,7 @@ public class RenderUtils {
 		} catch (Exception e) {
 			try {
 				//Clean up the tessellator, just in case.
-				Tessellator.instance.draw();
+				Tessellator.getInstance().draw();
 			} catch (Exception e2) {
 				//It might throw an exception, but that just means we didn't need to clean it up (this time)
 			}

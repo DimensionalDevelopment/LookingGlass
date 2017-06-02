@@ -2,59 +2,65 @@ package com.xcompwiz.lookingglass.command;
 
 import java.util.Random;
 
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.command.NumberInvalidException;
-import net.minecraft.command.PlayerNotFoundException;
-import net.minecraft.command.PlayerSelector;
+import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.server.FMLServerHandler;
 
 public abstract class CommandBaseAdv extends CommandBase {
 
 	public void sendToAdmins(ICommandSender agent, String text, Object[] objects) {
-		func_152373_a(agent, this, text, objects);
+		notifyCommandListener(agent, this, text, objects);
 	}
 
 	public static EntityPlayerMP getTargetPlayer(ICommandSender sender, String target) {
-		EntityPlayerMP entityplayermp = PlayerSelector.matchOnePlayer(sender, target);
+		EntityPlayerMP entityplayermp = EntitySelector.matchOnePlayer(sender, target);
 
 		if (entityplayermp == null) {
-			entityplayermp = MinecraftServer.getServer().getConfigurationManager().func_152612_a(target);
+			entityplayermp = FMLServerHandler.instance().getServer().getPlayerList().getPlayerByUsername(target);
 		}
-		if (entityplayermp == null) { throw new PlayerNotFoundException(); }
+		if (entityplayermp == null) {
+			try {
+				throw new PlayerNotFoundException();
+			} catch (PlayerNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
 		return entityplayermp;
 	}
 
 	public static Integer getSenderDimension(ICommandSender sender) {
 		World w = sender.getEntityWorld();
-		if (w == null) throw new CommandException("You must specify a dimension to use this command from the commandline");
-		return w.provider.dimensionId;
+		if (w == null) try {
+			throw new CommandException("You must specify a dimension to use this command from the commandline");
+		} catch (CommandException e) {
+			e.printStackTrace();
+		}
+		return w.provider.getDimension();
 	}
 
 	/**
 	 * Returns the given ICommandSender as a EntityPlayer or throw an exception.
 	 */
-	public static TileEntity getCommandSenderAsTileEntity(ICommandSender sender) {
+	public static TileEntity getCommandSenderAsTileEntity(ICommandSender sender) throws CommandException {
 		try {
 			World world = sender.getEntityWorld();
-			ChunkCoordinates coords = sender.getPlayerCoordinates();
-			return world.getTileEntity(coords.posX, coords.posY, coords.posZ);
+			BlockPos coords = sender.getPosition();
+			return world.getTileEntity(coords);
 		} catch (Exception e) {
 			throw new CommandException("Could not get tile entity");
 		}
 	}
 
-	public static double handleRelativeNumber(ICommandSender sender, double origin, String arg) {
+	public static double handleRelativeNumber(ICommandSender sender, double origin, String arg) throws NumberInvalidException {
 		return handleRelativeNumber(sender, origin, arg, -30000000, 30000000);
 	}
 
-	public static double handleRelativeNumber(ICommandSender par1ICommandSender, double origin, String arg, int min, int max) {
+	public static double handleRelativeNumber(ICommandSender par1ICommandSender, double origin, String arg, int min, int max) throws NumberInvalidException {
 		boolean relative = arg.startsWith("~");
 		boolean random = arg.startsWith("?");
 		if (random) relative = true;
@@ -67,7 +73,7 @@ public abstract class CommandBaseAdv extends CommandBase {
 				arg = arg.substring(1);
 			}
 
-			double d2 = parseDouble(par1ICommandSender, arg);
+			double d2 = parseDouble(arg);
 			if (random) {
 				Random rand = new Random();
 				d1 += (rand.nextDouble() * 2 - 1) * d2;
@@ -81,9 +87,9 @@ public abstract class CommandBaseAdv extends CommandBase {
 		}
 
 		if (min != 0 || max != 0) {
-			if (d1 < min) { throw new NumberInvalidException("commands.generic.double.tooSmall", new Object[] { Double.valueOf(d1), Integer.valueOf(min) }); }
+			if (d1 < min) { throw new NumberInvalidException("commands.generic.double.tooSmall", d1, min); }
 
-			if (d1 > max) { throw new NumberInvalidException("commands.generic.double.tooBig", new Object[] { Double.valueOf(d1), Integer.valueOf(max) }); }
+			if (d1 > max) { throw new NumberInvalidException("commands.generic.double.tooBig", d1, max); }
 		}
 
 		return d1;
@@ -93,16 +99,16 @@ public abstract class CommandBaseAdv extends CommandBase {
 	 * Returns the player for a username as an Entity or throws an exception.
 	 */
 	public static Entity parsePlayerByName(String name) throws PlayerNotFoundException {
-		EntityPlayerMP player = MinecraftServer.getServer().getConfigurationManager().func_152612_a(name);
+		EntityPlayerMP player = FMLServerHandler.instance().getServer().getPlayerList().getPlayerByUsername(name);
 		if (player != null) { return player; }
-		throw new PlayerNotFoundException("lookingglass.commands.generic.player.notfound", new Object[] { name });
+		throw new PlayerNotFoundException("lookingglass.commands.generic.player.notfound", name);
 	}
 
-	public static float parseFloat(ICommandSender par0ICommandSender, String par1Str) {
+	public static float parseFloat(ICommandSender par0ICommandSender, String par1Str) throws NumberInvalidException {
 		try {
 			return Float.parseFloat(par1Str);
 		} catch (NumberFormatException numberformatexception) {
-			throw new NumberInvalidException("commands.generic.num.invalid", new Object[] { par1Str });
+            throw new NumberInvalidException("commands.generic.num.invalid", par1Str);
 		}
 	}
 }

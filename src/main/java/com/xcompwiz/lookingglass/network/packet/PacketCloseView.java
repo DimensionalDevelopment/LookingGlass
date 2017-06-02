@@ -5,24 +5,34 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import com.xcompwiz.lookingglass.client.proxyworld.WorldView;
 import com.xcompwiz.lookingglass.proxyworld.ModConfigs;
+import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-import cpw.mods.fml.common.network.internal.FMLProxyPacket;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-public class PacketCloseView extends PacketHandlerBase {
+public class PacketCloseView implements IMessage {
 	@SideOnly(Side.CLIENT)
-	public static FMLProxyPacket createPacket(WorldView worldview) {
-		// This line may look like black magic (and, well, it is), but it's actually just returning a class reference for this class. Copy-paste safe.
-		ByteBuf data = PacketHandlerBase.createDataBuffer((Class<? extends PacketHandlerBase>) new Object() {}.getClass().getEnclosingClass());
+	public PacketCloseView(WorldView worldview) {}
 
-		return buildPacket(data);
+	@Override
+	public void fromBytes(ByteBuf buf) {
+
 	}
 
 	@Override
-	public void handle(ByteBuf data, EntityPlayer player) {
-		if (ModConfigs.disabled) return;
+	public void toBytes(ByteBuf buf) {
 
-		//TODO: make closing viewpoint aware.  See PacketCreateView
+	}
+
+	public static class Handler implements IMessageHandler<PacketCloseView, IMessage> {
+		@Override
+		public IMessage onMessage(PacketCloseView message, MessageContext ctx) {
+			if (ModConfigs.disabled) return null;
+
+			//TODO: make closing viewpoint aware.  See PacketCreateView
+			return null;
+		}
 	}
 }

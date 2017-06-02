@@ -5,5 +5,5 @@
 @API(owner = "LookingGlass", apiVersion = "1.0", provides = "LookingGlass|API")
 package com.xcompwiz.lookingglass.api;
 
-import cpw.mods.fml.common.API;
 
+import net.minecraftforge.fml.common.API;

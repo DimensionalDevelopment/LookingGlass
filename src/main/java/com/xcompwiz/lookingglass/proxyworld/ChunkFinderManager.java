@@ -1,5 +1,7 @@
 package com.xcompwiz.lookingglass.proxyworld;
 
+import net.minecraft.block.Block;
+
 import java.util.LinkedList;
 import java.util.List;
 
