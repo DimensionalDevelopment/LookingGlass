@@ -1,26 +1,31 @@
-__*
-*.bak
-*.xlsx
+# eclipse
+eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
 
-/releases
-/test
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
 
-/.gradle
-/.settings
-/bin
-/build
-/gradle
-/run
+# gradle
+build
+.gradle
 
-/.classpath
-/.project
-/gradlew
-/gradlew.bat
-/forge*.zip
+#Netbeans
+.nb-gradle
+.nb-gradle-properties
 
-/build.properties
-/locations.gradle
-
-/todo.txt
-/changes.txt
-/changelog.txt
+# other
+run
+libs
+forge-*-changelog.txt
+.DS_Store
+Thumbs.db
+logs

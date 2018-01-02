@@ -1,14 +1,13 @@
 package com.xcompwiz.lookingglass.apiimpl;
 
 public class APIWrapper {
-	private String	modname;
+    private String modname;
 
-	public APIWrapper(String modname) {
-		this.modname = modname;
-	}
+    public APIWrapper(String modname) {
+        this.modname = modname;
+    }
 
-	public String getOwnerMod() {
-		return modname;
-	}
-
+    public String getOwnerMod() {
+        return modname;
+    }
 }

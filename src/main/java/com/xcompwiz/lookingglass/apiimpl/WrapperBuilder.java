@@ -9,23 +9,23 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class WrapperBuilder {
 
-	private final Constructor	itemCtor;
+    private final Constructor itemCtor;
 
-	public WrapperBuilder(Class clazz) {
-		try {
-			itemCtor = clazz.getConstructor(String.class);
-		} catch (Exception e) {
-			throw new RuntimeException("LookingGlass has derped.", e);
-		}
-	}
+    public WrapperBuilder(Class clazz) {
+        try {
+            itemCtor = clazz.getConstructor(String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("LookingGlass has derped.", e);
+        }
+    }
 
-	/**
-	 * Called by the APIProviderImpl to construct the API wrapper passed to it on its construction.
-	 * @param owner
-	 * @return The instance
-	 */
-	public Object newInstance(String owner) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		return itemCtor.newInstance(owner);
-	}
-
+    /**
+     * Called by the APIProviderImpl to construct the API wrapper passed to it on its construction.
+     *
+     * @param owner
+     * @return The instance
+     */
+    public Object newInstance(String owner) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        return itemCtor.newInstance(owner);
+    }
 }
