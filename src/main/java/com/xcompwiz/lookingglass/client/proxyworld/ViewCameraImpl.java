@@ -2,6 +2,7 @@ package com.xcompwiz.lookingglass.client.proxyworld;
 
 import com.xcompwiz.lookingglass.api.view.IViewCamera;
 import com.xcompwiz.lookingglass.entity.EntityCamera;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
 public class ViewCameraImpl implements IViewCamera {
@@ -13,7 +14,7 @@ public class ViewCameraImpl implements IViewCamera {
 
     @Override
     public void addRotations(float yaw, int pitch) {
-        camera.setAngles(yaw, pitch);
+        camera.setLocationAndAngles(camera.posX, camera.posY, camera.posZ, yaw, pitch);
     }
 
     @Override
@@ -60,16 +61,16 @@ public class ViewCameraImpl implements IViewCamera {
 
     @Override
     public IBlockAccess getBlockData() {
-        return camera.worldObj;
+        return camera.world;
     }
 
     @Override
     public boolean chunkExists(int x, int z) {
-        return !camera.worldObj.getChunkFromBlockCoords(x, z).isEmpty();
+        return !camera.world.getChunkFromBlockCoords(new BlockPos(x, 0, z)).isEmpty();
     }
 
     @Override
     public boolean chunkLevelsExist(int x, int z, int yl1, int yl2) {
-        return !camera.worldObj.getChunkFromBlockCoords(x, z).getAreLevelsEmpty(yl1, yl2);
+        return !camera.world.getChunkFromBlockCoords(new BlockPos(x, 0, z)).isEmptyBetween(yl1, yl2);
     }
 }

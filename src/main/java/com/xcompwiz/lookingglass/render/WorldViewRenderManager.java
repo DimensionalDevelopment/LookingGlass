@@ -5,14 +5,15 @@ import com.xcompwiz.lookingglass.client.proxyworld.WorldView;
 import com.xcompwiz.lookingglass.client.render.RenderUtils;
 import com.xcompwiz.lookingglass.log.LoggerUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.particle.EffectRenderer;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
 
 import java.io.PrintStream;
 import java.util.Collection;
@@ -25,36 +26,36 @@ public class WorldViewRenderManager {
 
         long renderT = Minecraft.getSystemTime();
         //TODO: This and the renderWorldToTexture need to be remixed
-        WorldClient worldBackup = mc.theWorld;
+        WorldClient worldBackup = mc.world;
         RenderGlobal renderBackup = mc.renderGlobal;
-        EffectRenderer effectBackup = mc.effectRenderer;
-        EntityClientPlayerMP playerBackup = mc.thePlayer;
-        EntityLivingBase viewportBackup = mc.renderViewEntity;
+        ParticleManager effectBackup = mc.effectRenderer;
+        EntityPlayerSP playerBackup = mc.player;
+        Entity viewportBackup = mc.getRenderViewEntity();
 
         //TODO: This is a hack to work around some of the vanilla rendering hacks... Yay hacks.
-        float fovmult = playerBackup.getFOVMultiplier();
+        //float fovmult = playerBackup.getFOVMultiplier();
         ItemStack currentClientItem = playerBackup.inventory.getCurrentItem();
 
         for (WorldClient proxyworld : worlds) {
             if (proxyworld == null) continue;
-            mc.theWorld = proxyworld;
-            RenderManager.instance.set(mc.theWorld);
-            for (WorldView activeview : ProxyWorldManager.getWorldViews(proxyworld.provider.dimensionId)) {
+            mc.world = proxyworld;
+            mc.getRenderManager().setWorld(proxyworld); // TODO!!!
+            for (WorldView activeview : ProxyWorldManager.getWorldViews(proxyworld.provider.getDimension())) {
                 if (activeview.hasChunks() && activeview.markClean()) {
                     activeview.startRender(renderT);
 
                     mc.renderGlobal = activeview.getRenderGlobal();
                     mc.effectRenderer = activeview.getEffectRenderer();
-                    mc.renderViewEntity = activeview.camera;
-                    mc.thePlayer = activeview.camera;
+                    mc.setRenderViewEntity(activeview.camera);
+                    mc.player = activeview.camera;
                     //Other half of hack
-                    activeview.camera.setFOVMult(fovmult); //Prevents the FOV from flickering
+                    //activeview.camera.setFOVMult(fovmult); //Prevents the FOV from flickering
                     activeview.camera.inventory.currentItem = playerBackup.inventory.currentItem;
-                    activeview.camera.inventory.mainInventory[playerBackup.inventory.currentItem] = currentClientItem; //Prevents the hand from flickering
+                    activeview.camera.inventory.mainInventory.set(playerBackup.inventory.currentItem, currentClientItem); //Prevents the hand from flickering
 
                     try {
                         mc.renderGlobal.updateClouds();
-                        mc.theWorld.doVoidFogParticles(MathHelper.floor_double(activeview.camera.posX), MathHelper.floor_double(activeview.camera.posY), MathHelper.floor_double(activeview.camera.posZ));
+                        mc.world.doVoidFogParticles(MathHelper.floor(activeview.camera.posX), MathHelper.floor(activeview.camera.posY), MathHelper.floor(activeview.camera.posZ));
                         mc.effectRenderer.updateEffects();
                     } catch (Exception e) {
                         LoggerUtils.error("Client Proxy Dim had error while updating render elements: %s", e.getLocalizedMessage());
@@ -70,11 +71,13 @@ public class WorldViewRenderManager {
                 }
             }
         }
-        mc.renderViewEntity = viewportBackup;
-        mc.thePlayer = playerBackup;
+
+        mc.setRenderViewEntity(viewportBackup);
+        mc.player = playerBackup;
         mc.effectRenderer = effectBackup;
         mc.renderGlobal = renderBackup;
-        mc.theWorld = worldBackup;
-        RenderManager.instance.set(mc.theWorld);
+        mc.world = worldBackup;
+        mc.getRenderManager().setWorld(worldBackup);
+        // RenderManager.instance.set(mc.world); // TODO!!!
     }
 }

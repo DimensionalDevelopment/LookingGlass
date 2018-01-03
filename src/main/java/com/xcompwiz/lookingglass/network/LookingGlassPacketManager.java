@@ -2,13 +2,13 @@ package com.xcompwiz.lookingglass.network;
 
 import com.xcompwiz.lookingglass.log.LoggerUtils;
 import com.xcompwiz.lookingglass.network.packet.PacketHandlerBase;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.network.FMLEventChannel;
-import cpw.mods.fml.common.network.FMLNetworkEvent.ClientCustomPacketEvent;
-import cpw.mods.fml.common.network.FMLNetworkEvent.ServerCustomPacketEvent;
-import cpw.mods.fml.common.network.internal.FMLProxyPacket;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.FMLEventChannel;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -51,17 +51,17 @@ public class LookingGlassPacketManager {
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void onPacketData(ClientCustomPacketEvent event) {
-        FMLProxyPacket pkt = event.packet;
+    public void onPacketData(FMLNetworkEvent.ClientCustomPacketEvent event) {
+        FMLProxyPacket pkt = event.getPacket();
 
-        onPacketData(event.manager, pkt, Minecraft.getMinecraft().thePlayer);
+        onPacketData(event.getManager(), pkt, Minecraft.getMinecraft().player);
     }
 
     @SubscribeEvent
-    public void onPacketData(ServerCustomPacketEvent event) {
-        FMLProxyPacket pkt = event.packet;
+    public void onPacketData(FMLNetworkEvent.ServerCustomPacketEvent event) {
+        FMLProxyPacket pkt = event.getPacket();
 
-        onPacketData(event.manager, pkt, ((NetHandlerPlayServer) event.handler).playerEntity);
+        onPacketData(event.getManager(), pkt, ((NetHandlerPlayServer) event.getHandler()).player);
     }
 
     public void onPacketData(NetworkManager manager, FMLProxyPacket packet, EntityPlayer player) {
@@ -69,7 +69,7 @@ public class LookingGlassPacketManager {
             if (packet == null || packet.payload() == null) {
                 throw new RuntimeException("Empty packet sent to " + CHANNEL + " channel");
             }
-            ByteBuf data = packet.payload();
+            PacketBuffer data = new PacketBuffer(packet.payload());
             byte type = data.readByte();
 
             try {

@@ -12,36 +12,32 @@ import com.xcompwiz.lookingglass.network.ServerPacketDispatcher;
 import com.xcompwiz.lookingglass.network.packet.*;
 import com.xcompwiz.lookingglass.proxyworld.LookingGlassEventHandler;
 import com.xcompwiz.lookingglass.proxyworld.ModConfigs;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.*;
-import cpw.mods.fml.common.event.FMLInterModComms.IMCEvent;
-import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.registry.EntityRegistry;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.command.CommandHandler;
-import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.*;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 import java.io.File;
 
 @Mod(modid = LookingGlass.MODID, name = "LookingGlass", version = LookingGlass.VERSION)
 public class LookingGlass {
-    public static final String MODID = "LookingGlass";
-    public static final String VERSION = "@VERSION@";
+    public static final String MODID = "lookingglass";
+    public static final String VERSION = "${version}";
 
-    @Instance(LookingGlass.MODID)
+    @Mod.Instance(LookingGlass.MODID)
     public static LookingGlass instance;
 
     @SidedProxy(clientSide = "com.xcompwiz.lookingglass.client.ClientProxy", serverSide = "com.xcompwiz.lookingglass.core.CommonProxy")
     public static CommonProxy sidedProxy;
 
-    @EventHandler
+    @Mod.EventHandler
     public void preinit(FMLPreInitializationEvent event) {
         //Initialize the packet handling
         LookingGlassPacketManager.registerPacketHandler(new PacketCreateView(), (byte) 10);
@@ -68,27 +64,27 @@ public class LookingGlass {
 
         // Initialize the API provider system.  Beware, this way be dragons.
         APIProviderImpl.init();
+
+        sidedProxy.preinit();
     }
 
-    @EventHandler
+    @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         // Our one and only entity.
-        EntityRegistry.registerModEntity(EntityPortal.class, "lookingglass.portal", 216, this, 64, 10, false);
-
-        sidedProxy.init();
+        EntityRegistry.registerModEntity(new ResourceLocation(LookingGlass.MODID, "portal"), EntityPortal.class, "lookingglass.portal", 216, this, 64, 10, false);
     }
 
-    @EventHandler
-    public void handleIMC(IMCEvent event) {
+    @Mod.EventHandler
+    public void handleIMC(FMLInterModComms.IMCEvent event) {
         // Catch IMC messages and send them off to our IMC handler
-        ImmutableList<IMCMessage> messages = event.getMessages();
+        ImmutableList<FMLInterModComms.IMCMessage> messages = event.getMessages();
         IMCHandler.process(messages);
     }
 
-    @EventHandler
+    @Mod.EventHandler
     public void postinit(FMLPostInitializationEvent event) {}
 
-    @EventHandler
+    @Mod.EventHandler
     public void serverStart(FMLServerStartingEvent event) {
         MinecraftServer mcserver = event.getServer();
         // Register commands
@@ -97,7 +93,7 @@ public class LookingGlass {
         ServerPacketDispatcher.getInstance().start(); //Note: This might need to be preceded by a force init of the ServerPacketDispatcher.  Doesn't seem to currently have any issues, though.
     }
 
-    @EventHandler
+    @Mod.EventHandler
     public void serverStop(FMLServerStoppedEvent event) {
         // Shutdown our throttled packet dispatcher
         ServerPacketDispatcher.getInstance().halt();

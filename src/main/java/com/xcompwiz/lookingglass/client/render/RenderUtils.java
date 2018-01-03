@@ -1,7 +1,8 @@
 package com.xcompwiz.lookingglass.client.render;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.Tessellator;
@@ -43,11 +44,11 @@ public class RenderUtils {
             //mc.gameSettings.fovSetting = ;
 
             //Set gl options
-            GL11.glViewport(0, 0, mc.displayWidth, mc.displayHeight);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+            GlStateManager.viewport(0, 0, mc.displayWidth, mc.displayHeight);
+            GlStateManager.bindTexture(0);
             EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, framebuffer);
-            GL11.glClearColor(1.0f, 0.0f, 0.0f, 0.5f);
-            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+            GlStateManager.clearColor(1.0f, 0, 0, 0.5f);
+            GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT);
 
             int i1 = mc.gameSettings.limitFramerate;
             if (mc.isFramerateLimitBelowMax()) {
@@ -58,17 +59,17 @@ public class RenderUtils {
         } catch (Exception e) {
             try {
                 //Clean up the tessellator, just in case.
-                Tessellator.instance.draw();
+                Tessellator.getInstance().draw();
             } catch (Exception e2) {
                 //It might throw an exception, but that just means we didn't need to clean it up (this time)
             }
             throw new RuntimeException("Error while rendering proxy world", e);
         } finally {
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GlStateManager.enableTexture2D();
             EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, 0);
 
-            GL11.glViewport(0, 0, widthBackup, heightBackup);
-            GL11.glLoadIdentity();
+            GlStateManager.viewport(0, 0, widthBackup, heightBackup);
+            GlStateManager.loadIdentity();
 
             mc.gameSettings.thirdPersonView = thirdPersonBackup;
             mc.gameSettings.hideGUI = hideGuiBackup;

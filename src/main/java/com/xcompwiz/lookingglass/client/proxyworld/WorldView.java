@@ -5,19 +5,19 @@ import com.xcompwiz.lookingglass.api.view.IViewCamera;
 import com.xcompwiz.lookingglass.api.view.IWorldView;
 import com.xcompwiz.lookingglass.client.render.FrameBufferContainer;
 import com.xcompwiz.lookingglass.entity.EntityCamera;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.particle.ParticleManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 
 @SideOnly(Side.CLIENT)
 public class WorldView implements IWorldView {
-    private WorldClient worldObj;
-    public final ChunkCoordinates coords;
+    private WorldClient world;
+    public final BlockPos coords;
     public final EntityCamera camera;
     public final IViewCamera camerawrapper;
 
@@ -30,19 +30,19 @@ public class WorldView implements IWorldView {
     private long last_render_time = -1;
 
     private RenderGlobal renderGlobal;
-    private EffectRenderer effectRenderer;
+    private ParticleManager effectRenderer;
 
     private FrameBufferContainer fbo;
 
-    public WorldView(WorldClient worldObj, ChunkCoordinates coords, int width, int height) {
+    public WorldView(WorldClient world, BlockPos coords, int width, int height) {
         this.width = width;
         this.height = height;
-        this.worldObj = worldObj;
+        this.world = world;
         this.coords = coords;
-        camera = new EntityCamera(worldObj, coords);
+        camera = new EntityCamera(world, coords);
         camerawrapper = new ViewCameraImpl(camera);
         renderGlobal = new RenderGlobal(Minecraft.getMinecraft());
-        effectRenderer = new EffectRenderer(worldObj, Minecraft.getMinecraft().getTextureManager());
+        effectRenderer = new ParticleManager(world, Minecraft.getMinecraft().getTextureManager());
         // Technically speaking, this is poor practice as it leaks a reference to the view before it's done constructing.
         fbo = FrameBufferContainer.createNewFramebuffer(this, width, height);
     }
@@ -86,7 +86,7 @@ public class WorldView implements IWorldView {
         return renderGlobal;
     }
 
-    public EffectRenderer getEffectRenderer() {
+    public ParticleManager getEffectRenderer() {
         return effectRenderer;
     }
 
@@ -105,12 +105,12 @@ public class WorldView implements IWorldView {
 
     public void onChunkReceived(int cx, int cz) {
         hasChunks = true;
-        int cam_cx = MathHelper.floor_double(camera.posX) >> 4;
-        int cam_cz = MathHelper.floor_double(camera.posZ) >> 4;
+        int cam_cx = MathHelper.floor(camera.posX) >> 4;
+        int cam_cz = MathHelper.floor(camera.posZ) >> 4;
         if (cam_cx >= cx - 1 && cam_cx <= cx + 1 && cam_cz > cz - 1 && cam_cz < cz + 1) camera.refreshAnimator();
     }
 
-    public void updateWorldSpawn(ChunkCoordinates cc) {
+    public void updateWorldSpawn(BlockPos cc) {
         camera.updateWorldSpawn(cc);
     }
 
@@ -137,13 +137,13 @@ public class WorldView implements IWorldView {
      * @param world The new world
      */
     public void replaceWorldObject(WorldClient world) {
-        worldObj = world;
-        camera.worldObj = world;
+        world = world;
+        camera.world = world;
         effectRenderer.clearEffects(world);
         renderGlobal.setWorldAndLoadRenderers(world);
     }
 
     public WorldClient getWorldObj() {
-        return worldObj;
+        return world;
     }
 }

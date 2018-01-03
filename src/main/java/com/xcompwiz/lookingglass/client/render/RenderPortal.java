@@ -2,19 +2,26 @@ package com.xcompwiz.lookingglass.client.render;
 
 import com.xcompwiz.lookingglass.api.view.IWorldView;
 import com.xcompwiz.lookingglass.entity.EntityPortal;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-public class RenderPortal extends Render {
+import javax.annotation.Nullable;
+
+public class RenderPortal extends Render<EntityPortal> {
+
+    public RenderPortal(RenderManager renderManager) {
+        super(renderManager);
+    }
 
     @Override
-    public void doRender(Entity entity, double d, double d1, double d2, float f, float f1) {
-        if (!(entity instanceof EntityPortal)) return;
-        EntityPortal portal = (EntityPortal) entity;
-        IWorldView activeview = portal.getActiveView();
+    public void doRender(EntityPortal entity, double x, double y, double z, float entityYaw, float partialTicks) {
+        IWorldView activeview = entity.getActiveView();
         if (activeview == null) return;
 
         int texture = activeview.getTexture();
@@ -25,42 +32,46 @@ public class RenderPortal extends Render {
         double left = -width / 2.;
         double top = 0;
 
+
         activeview.markDirty();
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
-        GL11.glDisable(GL11.GL_LIGHTING);
+        GlStateManager.disableAlpha();
+        GlStateManager.disableLighting();
 
-        GL11.glPushMatrix();
-        GL11.glTranslatef((float) d, (float) d1, (float) d2);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, z);
+        //GlStateManager.rotate(entityYaw, 0.0F, 1.0F, 0.0F);
 
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
-        Tessellator tessellator = Tessellator.instance;
-        tessellator.setColorRGBA_F(1, 1, 1, 1);
-        tessellator.startDrawingQuads();
-        tessellator.addVertexWithUV(left, top, 0.0D, 0.0D, 0.0D); //inc=bl out; inc=bl down
-        tessellator.addVertexWithUV(width + left, top, 0.0D, 1.0D, 0.0D); //dc=br out; inc=br down
-        tessellator.addVertexWithUV(width + left, height + top, 0.0D, 1.0D, 1.0D); //dec=tr out; dec=tr up
-        tessellator.addVertexWithUV(left, height + top, 0.0D, 0.0D, 1.0D); //inc=lt out; dec=tl up
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder worldRenderer = tessellator.getBuffer();
+
+        // Render the front of the portal
+        GlStateManager.bindTexture(texture);
+        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        worldRenderer.pos(left, top, 0.0D).tex(0.0D, 0.0D).endVertex(); //inc=bl out; inc=bl down
+        worldRenderer.pos(width + left, top, 0.0D).tex(1.0D, 0.0D).endVertex(); //dc=br out; inc=br down
+        worldRenderer.pos(width + left, height + top, 0.0D).tex(1.0D, 1.0D).endVertex(); //dec=tr out; dec=tr up
+        worldRenderer.pos(left, height + top, 0.0D).tex(0.0D, 1.0D).endVertex(); //inc=lt out; dec=tl up
         tessellator.draw();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        //XXX: Make the back of the portals a little nicer
-        tessellator.setColorRGBA_F(0, 0, 1, 1);
-        tessellator.startDrawingQuads();
-        tessellator.addVertexWithUV(left, height + top, 0.0D, 0.0D, 1.0D);
-        tessellator.addVertexWithUV(width + left, height + top, 0.0D, 1.0D, 1.0D);
-        tessellator.addVertexWithUV(width + left, top, 0.0D, 1.0D, 0.0D);
-        tessellator.addVertexWithUV(left, top, 0.0D, 0.0D, 0.0D);
-        tessellator.draw();
-        GL11.glPopMatrix();
 
-        GL11.glEnable(GL11.GL_LIGHTING);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        // Render the back of the portal TODO
+        //TODO: Make the back of the portals a little nicer
+        /*GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        worldRenderer.color(0, 0, 1, 1);
+        worldRenderer.pos(left, height + top, 0.0D).tex(0.0D, 1.0D).endVertex();
+        worldRenderer.pos(width + left, height + top, 0.0D).tex(1.0D, 1.0D).endVertex();
+        worldRenderer.pos(width + left, top, 0.0D).tex(1.0D, 0.0D).endVertex();
+        worldRenderer.pos(left, top, 0.0D).tex(0.0D, 0.0D).endVertex();
+        tessellator.draw();*/
+
+        GlStateManager.popMatrix();
+
+        GlStateManager.enableLighting();
+        GlStateManager.enableAlpha();
+        super.doRender(entity, x, y, z, entityYaw, partialTicks);
     }
 
-    @Override
-    protected void bindEntityTexture(Entity entity) {}
-
-    @Override
-    protected ResourceLocation getEntityTexture(Entity entity) {
+    @Nullable @Override protected ResourceLocation getEntityTexture(EntityPortal entity) {
         return null;
     }
 }

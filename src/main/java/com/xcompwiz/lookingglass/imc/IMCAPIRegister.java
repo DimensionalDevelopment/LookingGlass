@@ -4,14 +4,14 @@ import com.xcompwiz.lookingglass.api.APIInstanceProvider;
 import com.xcompwiz.lookingglass.apiimpl.InternalAPI;
 import com.xcompwiz.lookingglass.imc.IMCHandler.IMCProcessor;
 import com.xcompwiz.lookingglass.log.LoggerUtils;
-import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
+import net.minecraftforge.fml.common.event.FMLInterModComms;
 
 import java.lang.reflect.Method;
 
 public class IMCAPIRegister implements IMCProcessor {
 
     @Override
-    public void process(IMCMessage message) {
+    public void process(FMLInterModComms.IMCMessage message) {
         if (!message.isStringMessage()) return;
         LoggerUtils.info(String.format("Receiving API registration request from [%s] for method %s", message.getSender(), message.getStringValue()));
         callbackRegistration(message.getStringValue(), message.getSender());

@@ -1,7 +1,7 @@
 package com.xcompwiz.lookingglass.network;
 
 import com.xcompwiz.lookingglass.proxyworld.ModConfigs;
-import cpw.mods.fml.common.network.internal.FMLProxyPacket;
+import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.LinkedList;
