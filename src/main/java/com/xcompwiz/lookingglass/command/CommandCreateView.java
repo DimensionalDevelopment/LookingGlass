@@ -1,23 +1,31 @@
 package com.xcompwiz.lookingglass.command;
 
 import com.xcompwiz.lookingglass.entity.EntityPortal;
+import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.DimensionManager;
 
-public class CommandCreateView extends CommandBaseAdv {
+import java.util.ArrayList;
+import java.util.List;
+
+public class CommandCreateView extends CommandBase {
     @Override
     public String getName() {
-        return "lg-viewdim";
+        return "createview";
     }
 
     @Override
-    public String getUsage(ICommandSender par1ICommandSender) {
+    public List<String> getAliases() {
+        List<String> aliases = new ArrayList<>();
+        aliases.add("lg");
+        return aliases;
+    }
+
+    @Override
+    public String getUsage(ICommandSender sender) {
         return "/" + getName() + " dim x y z";
     }
 
@@ -31,6 +39,6 @@ public class CommandCreateView extends CommandBaseAdv {
         EntityPortal portal = new EntityPortal(sender.getEntityWorld(), sender.getPosition(), targetDim, targetPos);
         sender.getEntityWorld().spawnEntity(portal);
 
-        sendToAdmins(sender, "A window to dimension " + targetDim + " at " + targetPos + " has been created.", new Object[0]);
+        notifyCommandListener(sender, this, "A window to dimension " + targetDim + " at " + targetPos + " has been created.");
     }
 }

@@ -13,23 +13,21 @@ import net.minecraft.util.math.BlockPos;
  *
  * @author xcompwiz
  */
-public class LookingGlassAPI2Wrapper extends APIWrapper implements WorldViewAPI2 {
+public class LookingGlassAPI2Impl implements WorldViewAPI2 {
 
-    public LookingGlassAPI2Wrapper(String modname) {
-        super(modname);
-    }
+    public LookingGlassAPI2Impl() {}
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IWorldView createWorldView(Integer dimid, BlockPos spawn, int width, int height) { // TODO: unbreak API
-        return ProxyWorldManager.createWorldView(dimid, spawn, width, height);
+    public IWorldView createWorldView(Integer dim, BlockPos pos, int width, int height) { // TODO: unbreak API
+        return ProxyWorldManager.createWorldView(dim, pos, width, height);
     }
 
     @Override
-    public void cleanupWorldView(IWorldView worldview) {
-        if (worldview == null) return;
-        if (!(worldview instanceof WorldView))
+    public void cleanupWorldView(IWorldView worldView) {
+        if (worldView == null) return;
+        if (!(worldView instanceof WorldView))
             throw new RuntimeException("[%s] is misusing the LookingGlass API. Cannot cleanup custom IWorldView objects.");
-        ProxyWorldManager.destroyWorldView((WorldView) worldview);
+        ProxyWorldManager.destroyWorldView((WorldView) worldView);
     }
 }

@@ -20,7 +20,8 @@ import net.minecraft.world.World;
 
 /**
  * Our camera entity. This is made a player so that we can replace the player client-side when doing rendering.
- * At the bottom of the class we create a bunch of method stubs to override higher level logic, so that our "player" doesn't act like one.
+ * At the bottom of the class we create a bunch of method stubs to override higher level logic, so that our "player"
+ * doesn't act like one.
  */
 public class EntityCamera extends EntityPlayerSP { // TODO: Rewrite this class for 1.12
 
@@ -28,16 +29,16 @@ public class EntityCamera extends EntityPlayerSP { // TODO: Rewrite this class f
     private BlockPos target;
     private boolean defaultSpawn = false;
 
-    private float fovmultiplier = 1;
+    private float fovMultiplier = 1;
 
     public EntityCamera(World world, BlockPos spawn) {
         super(Minecraft.getMinecraft(), world, Minecraft.getMinecraft().getConnection(), null, null);
         target = spawn;
         if (target == null) {
             defaultSpawn = true;
-            BlockPos cc = world.provider.getSpawnPoint();
-            int y = updateTargetPosition(cc);
-            target = new BlockPos(cc.getX(), y, cc.getZ());
+            BlockPos pos = world.provider.getSpawnPoint();
+            int y = updateTargetPosition(pos);
+            target = new BlockPos(pos.getX(), y, pos.getZ());
         }
         setPosition(target.getX(), target.getY(), target.getZ());
         // TODO: we can't update, that throws a CongurrentModificationException sometimes
@@ -56,12 +57,12 @@ public class EntityCamera extends EntityPlayerSP { // TODO: Rewrite this class f
         getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.0D);
     }
 
-    public void updateWorldSpawn(BlockPos cc) {
+    public void updateWorldSpawn(BlockPos pos) {
         if (defaultSpawn) {
-            int y = updateTargetPosition(cc);
-            target = new BlockPos(cc.getX(), y, cc.getZ());
+            int y = updateTargetPosition(pos);
+            target = new BlockPos(pos.getX(), y, pos.getZ());
             setPositionAndUpdate(target.getX(), target.getY(), target.getZ());
-            if (animator != null) animator.setTarget(cc);
+            if (animator != null) animator.setTarget(pos);
             refreshAnimator();
         }
     }
@@ -72,10 +73,12 @@ public class EntityCamera extends EntityPlayerSP { // TODO: Rewrite this class f
         int z = target.getZ();
         if (!world.getChunkFromBlockCoords(target).isEmpty()) {
             if (world.getBlockState(target).getMaterial().blocksMovement()) {
+                //noinspection StatementWithEmptyBody
                 while (y > 0 && world.getBlockState(new BlockPos(x, --y, z)).getMaterial().blocksMovement());
                 if (y == 0) y = target.getY();
                 else ++y;
             } else {
+                //noinspection StatementWithEmptyBody,StatementWithEmptyBody
                 while (y < 256 && !world.getBlockState(new BlockPos(x, ++y, z)).getMaterial().blocksMovement());
                 if (y == 256) y = target.getY();
             }
@@ -94,11 +97,11 @@ public class EntityCamera extends EntityPlayerSP { // TODO: Rewrite this class f
 
     //@Override // TODO
     //public float getFOVMultiplier() {
-    //    return fovmultiplier;
+    //    return fovMultiplier;
     //}
 
     public void setFOVMult(float fovmult) {
-        fovmultiplier = fovmult;
+        fovMultiplier = fovmult;
     }
 
     /*

@@ -20,20 +20,19 @@ import net.minecraftforge.common.MinecraftForge;
 
 public class PacketCreateView extends PacketHandlerBase {
     @SideOnly(Side.CLIENT)
-    public static FMLProxyPacket createPacket(WorldView worldview) {
-        // This line may look like black magic (and, well, it is), but it's actually just returning a class reference for this class. Copy-paste safe.
-        PacketBuffer data = PacketHandlerBase.createDataBuffer((Class<? extends PacketHandlerBase>) new Object() {}.getClass().getEnclosingClass());
+    public static FMLProxyPacket createPacket(WorldView worldView) {
+        PacketBuffer data = PacketHandlerBase.createDataBuffer(PacketCreateView.class);
 
         int x = 0;
         int y = -1;
         int z = 0;
-        if (worldview.coords != null) {
-            x = worldview.coords.getX() >> 4;
-            y = worldview.coords.getY() >> 4;
-            z = worldview.coords.getZ() >> 4;
+        if (worldView.pos != null) {
+            x = worldView.pos.getX() >> 4;
+            y = worldView.pos.getY() >> 4;
+            z = worldView.pos.getZ() >> 4;
         }
 
-        data.writeInt(worldview.getWorldObj().provider.getDimension());
+        data.writeInt(worldView.getWorld().provider.getDimension());
         data.writeInt(x);
         data.writeInt(y);
         data.writeInt(z);

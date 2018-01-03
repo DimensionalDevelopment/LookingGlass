@@ -152,8 +152,7 @@ public class CameraAnimatorPivot implements ICameraAnimator {
         for (int i = 0; i < 15; i++)
             for (int j = 0; j < 15; j++)
                 if (!isBlockNormalCube(camera.getBlockData(), x2 + i, y2, z2 + i)) return false;
-        if (camera.chunkLevelsExist(x, z, yl, yl + 15)) return true;
-        return false;
+        return camera.chunkLevelsExist(x, z, yl, yl + 15);
     }
 
     private boolean isBlockNormalCube(IBlockAccess blockData, int x, int y, int z) {
@@ -168,10 +167,12 @@ public class CameraAnimatorPivot implements ICameraAnimator {
         int yBackup = y;
         if (camera.chunkExists(x, z)) {
             if (camera.getBlockData().getBlockState(new BlockPos(x, y, z)).getMaterial().blocksMovement()) {
+                //noinspection StatementWithEmptyBody
                 while (y > 0 && camera.getBlockData().getBlockState(new BlockPos(x, --y, z)).getMaterial().blocksMovement());
                 if (y == 0) y = yBackup;
                 else y += 2;
             } else {
+                //noinspection StatementWithEmptyBody
                 while (y < 256 && !camera.getBlockData().getBlockState(new BlockPos(x, ++y, z)).getMaterial().blocksMovement());
                 if (y == 256) y = yBackup;
                 else ++y;

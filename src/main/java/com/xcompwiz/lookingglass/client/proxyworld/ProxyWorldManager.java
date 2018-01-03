@@ -3,32 +3,30 @@ package com.xcompwiz.lookingglass.client.proxyworld;
 import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.client.render.FrameBufferContainer;
 import com.xcompwiz.lookingglass.entity.EntityCamera;
-import com.xcompwiz.lookingglass.log.LoggerUtils;
 import com.xcompwiz.lookingglass.network.LookingGlassPacketManager;
 import com.xcompwiz.lookingglass.network.packet.PacketCloseView;
 import com.xcompwiz.lookingglass.network.packet.PacketCreateView;
 import com.xcompwiz.lookingglass.proxyworld.ModConfigs;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class ProxyWorldManager {
-    private static Map<Integer, WorldClient> proxyworlds = new HashMap<Integer, WorldClient>();
-    private static Collection<WorldClient> proxyworldset = Collections.unmodifiableCollection(proxyworlds.values());
+public final class ProxyWorldManager {
+    private static Map<Integer, WorldClient> proxyWorlds = new HashMap<>();
+    private static Collection<WorldClient> proxyWorldSet = Collections.unmodifiableCollection(proxyWorlds.values());
     /**
      * We actually populate this with weak sets. This allows for the world views to be freed without us needing to do anything.
      */
-    private static Map<Integer, Collection<WorldView>> worldviewsets = new HashMap<Integer, Collection<WorldView>>();
+    private static Map<Integer, Collection<WorldView>> worldViewSets = new HashMap<>();
 
     /**
      * This is a complex bit. As we want to reuse the current client world when rendering, if possible, we need to handle when that world changes. We could
@@ -40,11 +38,11 @@ public class ProxyWorldManager {
     public static void handleWorldChange(WorldClient world) {
         if (ModConfigs.disabled) return;
         if (world == null) return;
-        int dimid = world.provider.getDimension();
-        if (!proxyworlds.containsKey(dimid)) return; //BEST CASE! We don't have to do anything!
-        proxyworlds.put(dimid, world);
-        Collection<WorldView> worldviews = worldviewsets.get(dimid);
-        for (WorldView view : worldviews) {
+        int dim = world.provider.getDimension();
+        if (!proxyWorlds.containsKey(dim)) return; //BEST CASE! We don't have to do anything!
+        proxyWorlds.put(dim, world);
+        Collection<WorldView> worldViews = worldViewSets.get(dim);
+        for (WorldView view : worldViews) {
             // Handle the change on the view object
             view.replaceWorldObject(world);
         }
@@ -52,37 +50,37 @@ public class ProxyWorldManager {
 
     public static synchronized void detectFreedWorldViews() {
         FrameBufferContainer.detectFreedWorldViews();
-        //TODO: closeViewConnection(worldviewID);
-        HashSet<Integer> emptyLists = new HashSet<Integer>();
-        for (Map.Entry<Integer, Collection<WorldView>> entry : worldviewsets.entrySet()) {
+        //TODO: closeViewConnection(view);
+        HashSet<Integer> emptyLists = new HashSet<>();
+        for (Map.Entry<Integer, Collection<WorldView>> entry : worldViewSets.entrySet()) {
             if (entry.getValue().isEmpty()) emptyLists.add(entry.getKey());
         }
-        for (Integer dimId : emptyLists) {
-            unloadProxyWorld(dimId);
+        for (int dim : emptyLists) {
+            unloadProxyWorld(dim);
         }
     }
 
-    public static synchronized WorldClient getProxyworld(int dimid) {
+    public static synchronized WorldClient getProxyWorld(int dim) {
         if (ModConfigs.disabled) return null;
-        WorldClient proxyworld = proxyworlds.get(dimid);
+        WorldClient proxyworld = proxyWorlds.get(dim);
         if (proxyworld == null) {
-            if (!DimensionManager.isDimensionRegistered(dimid)) return null;
+            if (!DimensionManager.isDimensionRegistered(dim)) return null;
             // We really don't want to be doing this during a render cycle
             if (Minecraft.getMinecraft().player instanceof EntityCamera)
                 return null; //TODO: This check probably needs to be altered
             WorldClient world = Minecraft.getMinecraft().world;
-            if (world != null && world.provider.getDimension() == dimid) proxyworld = world;
-            if (proxyworld == null) proxyworld = new ProxyWorld(dimid);
-            proxyworlds.put(dimid, proxyworld);
-            worldviewsets.put(dimid, Collections.newSetFromMap(new WeakHashMap<WorldView, Boolean>()));
+            if (world != null && world.provider.getDimension() == dim) proxyworld = world;
+            if (proxyworld == null) proxyworld = new ProxyWorld(dim);
+            proxyWorlds.put(dim, proxyworld);
+            worldViewSets.put(dim, Collections.newSetFromMap(new WeakHashMap<>()));
         }
         return proxyworld;
     }
 
-    private static void unloadProxyWorld(int dimId) {
-        Collection<WorldView> set = worldviewsets.remove(dimId);
-        if (set != null && set.size() > 0) LoggerUtils.warn("Unloading ProxyWorld with live views");
-        WorldClient proxyworld = proxyworlds.remove(dimId);
+    private static void unloadProxyWorld(int dim) {
+        Collection<WorldView> set = worldViewSets.remove(dim);
+        if (set != null && set.size() > 0) LookingGlass.log.warn("Unloading ProxyWorld with live views");
+        WorldClient proxyworld = proxyWorlds.remove(dim);
         WorldClient world = Minecraft.getMinecraft().world;
         if (world != null && world == proxyworld) return;
         if (proxyworld != null)
@@ -90,56 +88,55 @@ public class ProxyWorldManager {
     }
 
     public static void clearProxyworlds() {
-        while (!proxyworlds.isEmpty()) {
-            unloadProxyWorld(proxyworlds.keySet().iterator().next());
+        while (!proxyWorlds.isEmpty()) {
+            unloadProxyWorld(proxyWorlds.keySet().iterator().next());
         }
     }
 
-    public static Collection<WorldClient> getProxyworlds() {
-        return proxyworldset;
+    public static Collection<WorldClient> getProxyWorlds() {
+        return proxyWorldSet;
     }
 
-    public static Collection<WorldView> getWorldViews(int dimid) {
-        Collection<WorldView> set = worldviewsets.get(dimid);
+    public static Collection<WorldView> getWorldViews(int dim) {
+        Collection<WorldView> set = worldViewSets.get(dim);
         if (set == null) return Collections.emptySet();
         return Collections.unmodifiableCollection(set);
     }
 
-    public static WorldView createWorldView(int dimid, BlockPos spawn, int width, int height) {
+    public static WorldView createWorldView(int dim, BlockPos spawn, int width, int height) {
         if (ModConfigs.disabled) return null;
-        if (!DimensionManager.isDimensionRegistered(dimid)) return null;
+        if (!DimensionManager.isDimensionRegistered(dim)) return null;
 
-        WorldClient proxyworld = ProxyWorldManager.getProxyworld(dimid);
-        if (proxyworld == null) return null;
+        WorldClient proxyWorld = ProxyWorldManager.getProxyWorld(dim);
+        if (proxyWorld == null) return null;
 
-        Collection<WorldView> worldviews = worldviewsets.get(dimid);
-        if (worldviews == null) return null;
+        Collection<WorldView> worldViews = worldViewSets.get(dim);
+        if (worldViews == null) return null;
 
-        WorldView view = new WorldView(proxyworld, spawn, width, height);
+        WorldView view = new WorldView(proxyWorld, spawn, width, height);
 
         // Initialize the view rendering system
         Minecraft mc = Minecraft.getMinecraft();
         Entity backup = mc.getRenderViewEntity();
         mc.setRenderViewEntity(view.camera);
         try {
-            view.getRenderGlobal().setWorldAndLoadRenderers(proxyworld);
+            view.getRenderGlobal().setWorldAndLoadRenderers(proxyWorld);
         } catch (OutOfMemoryError error) {
-            LoggerUtils.warn("Failed to create world view, not enough memory!");
+            LookingGlass.log.warn("Failed to create world view, not enough memory!");
             view.getRenderGlobal().setWorldAndLoadRenderers(null);
-            return null;
+            throw new RuntimeException(error); // TODO
         }
         mc.setRenderViewEntity(backup);
 
         // Inform the server of the new view
         LookingGlassPacketManager.bus.sendToServer(PacketCreateView.createPacket(view));
-        worldviews.add(view);
+        worldViews.add(view);
         return view;
     }
 
-    // TODO:
-    //private static void closeViewConnection(WorldView view) {
-    //    LookingGlassPacketManager.bus.sendToServer(PacketCloseView.createPacket(view));
-    //}
+    private static void closeViewConnection(WorldView view) {
+        LookingGlassPacketManager.bus.sendToServer(PacketCloseView.createPacket(view));
+    }
 
     /**
      * Handles explicit shutdown of a world view. Tells the view to clean itself up and removes it from the tracked world views here (encouraging the world to unload).
@@ -147,10 +144,10 @@ public class ProxyWorldManager {
      * @param view The view to kill
      */
     public static void destroyWorldView(WorldView view) {
-        Collection<WorldView> set = worldviewsets.get(view.getWorldObj().provider.getDimension());
+        Collection<WorldView> set = worldViewSets.get(view.getWorld().provider.getDimension());
         view.getRenderGlobal().setWorldAndLoadRenderers(null);
         if (set != null) set.remove(view);
-        //closeViewConnection(view);
+        closeViewConnection(view);
         view.cleanup();
     }
 }

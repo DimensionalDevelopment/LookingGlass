@@ -10,8 +10,6 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 
-import javax.annotation.Nullable;
-
 // FIXME: AAHH! Fake world classes! EXTERMINATE!
 public class ProxyWorld extends WorldClient {
     public ProxyWorld(int dimensionID) {

@@ -1,9 +1,7 @@
 package com.xcompwiz.lookingglass.proxyworld;
 
-import com.xcompwiz.lookingglass.log.LoggerUtils;
 import com.xcompwiz.lookingglass.network.ServerPacketDispatcher;
 import com.xcompwiz.lookingglass.network.packet.PacketChunkInfo;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
@@ -19,34 +17,32 @@ import java.util.List;
  * @author Ken Butler/shadowking97
  */
 public class ChunkFinder {
-
     private final IChunkProvider chunkProvider;
     private final int rootX;
     private final int rootZ;
     private final int range;
-    private final int dimension;
+    private final int dim;
     private final EntityPlayer player;
     private ChunkData[][] map;
-    private List<BlockPos> cc;
+    private List<BlockPos> pos;
     private final int d;
     private int step;
     private int stepRange;
-    private long startTime;
+    @SuppressWarnings("unused") private long startTime;
 
     /**
      * Finds exposed chunks. Chunks must be loaded.
      *
      * @param root          The chunk in chunk coordinates.
-     * @param dimension     The target dimension
+     * @param dimension     The target dim
      * @param chunkProvider The world server that contains the chunks
      * @param player        The player to send the chunks to
      * @param range         The radius of the chunkfinder.
-     * @return Sorted Chunk Data, by range. Prioritizes closest chunks.
      */
     public ChunkFinder(BlockPos root, int dimension, IChunkProvider chunkProvider, EntityPlayer player, int range) {
         this.chunkProvider = chunkProvider;
         this.range = range;
-        this.dimension = dimension;
+        dim = dimension;
         this.player = player;
         d = (range << 1) + 1;
         map = new ChunkData[d][d];
@@ -55,7 +51,7 @@ public class ChunkFinder {
         stepRange = 16 - root.getY();
         if (root.getY() > stepRange) stepRange = root.getY();
         startTime = System.nanoTime();
-        LoggerUtils.debug("ChunkFinder scan started at nano: " + startTime);
+        // LookingGlass.log.debug("ChunkFinder scan started at nano: " + startTime);
         for (int i = 0; i < d; i++) {
             for (int j = 0; j < d; j++) {
                 map[i][j] = new ChunkData(i + rootX, j + rootZ);
@@ -64,17 +60,17 @@ public class ChunkFinder {
                 map[i][j].distance = x1 * x1 + z1 * z1;
             }
         }
-        cc = new LinkedList<BlockPos>();
-        cc.add(new BlockPos(range, root.getY(), range));
+        pos = new LinkedList<>();
+        pos.add(new BlockPos(range, root.getY(), range));
         step = 0;
-        List<BlockPos> cc2 = new LinkedList<BlockPos>();
-        while (step - 1 < stepRange && !cc.isEmpty()) {
-            while (!cc.isEmpty()) {
-                cc2.addAll(scan(chunkProvider, map, cc.get(0), range));
-                cc.remove(0);
+        List<BlockPos> cc2 = new LinkedList<>();
+        while (step - 1 < stepRange && !pos.isEmpty()) {
+            while (!pos.isEmpty()) {
+                cc2.addAll(scan(chunkProvider, map, pos.get(0), range));
+                pos.remove(0);
             }
             step++;
-            cc.addAll(cc2);
+            pos.addAll(cc2);
             cc2.clear();
             if (step >= stepRange) {
                 int range2 = step - stepRange + 1;
@@ -94,7 +90,7 @@ public class ChunkFinder {
                             Chunk c2 = chunkProvider.provideChunk(data.x, data.z);
                             if (!c2.isLoaded()) c2 = chunkProvider.provideChunk(data.x, data.z);
 
-                            ServerPacketDispatcher.getInstance().addPacket(player, PacketChunkInfo.createPacket(c2, true, data.levels(), dimension));
+                            ServerPacketDispatcher.getInstance().addPacket(player, PacketChunkInfo.createPacket(c2, data.levels(), dimension));
                         }
                     }
                 }
@@ -103,20 +99,20 @@ public class ChunkFinder {
     }
 
     public boolean findChunks() {
-        if (!cc.isEmpty()) {
+        if (!pos.isEmpty()) {
             int tick = 0;
-            List<BlockPos> cc2 = new LinkedList<BlockPos>();
-            while (!cc.isEmpty() && tick < 15) {
-                BlockPos ch = cc.get(0);
+            List<BlockPos> cc2 = new LinkedList<>();
+            while (!pos.isEmpty() && tick < 15) {
+                BlockPos ch = pos.get(0);
                 cc2.addAll(scan(chunkProvider, map, ch, range));
-                cc.remove(0);
+                pos.remove(0);
                 ++tick;
             }
-            if (!cc.isEmpty()) return false;
+            if (!pos.isEmpty()) return false;
 
             step++;
 
-            cc.addAll(cc2);
+            pos.addAll(cc2);
             cc2.clear();
 
             if (step >= stepRange) {
@@ -136,7 +132,7 @@ public class ChunkFinder {
                             ChunkData data = map[i][j];
                             Chunk c2 = chunkProvider.provideChunk(data.x, data.z);
                             if (!c2.isLoaded()) c2 = chunkProvider.provideChunk(data.x, data.z);
-                            ServerPacketDispatcher.getInstance().addPacket(player, PacketChunkInfo.createPacket(c2, true, data.levels(), dimension));
+                            ServerPacketDispatcher.getInstance().addPacket(player, PacketChunkInfo.createPacket(c2, data.levels(), dim));
                         }
                     }
                 }
@@ -154,24 +150,24 @@ public class ChunkFinder {
                         ChunkData data = map[i][j];
                         Chunk c2 = chunkProvider.provideChunk(data.x, data.z);
                         if (!c2.isLoaded()) c2 = chunkProvider.provideChunk(data.x, data.z);
-                        ServerPacketDispatcher.getInstance().addPacket(player, PacketChunkInfo.createPacket(c2, true, data.levels(), dimension));
+                        ServerPacketDispatcher.getInstance().addPacket(player, PacketChunkInfo.createPacket(c2, data.levels(), dim));
                     }
                 }
             }
         }
-        LoggerUtils.debug("Scan finished. nanoseconds: " + (System.nanoTime() - startTime));
+        // LookingGlass.log.debug("Scan finished. nanoseconds: " + (System.nanoTime() - startTime));
         return true;
     }
 
     /**
      * Recursive function to find all chunk segments attached to the surface.
      */
-    private static List<BlockPos> scan(IChunkProvider chunkProvider, ChunkData[][] map, BlockPos coord, int range) {
+    private static List<BlockPos> scan(IChunkProvider chunkProvider, ChunkData[][] map, BlockPos pos, int range) {
         int rangeSqr = range * range;
-        List<BlockPos> cc3 = new LinkedList<BlockPos>();
-        int x = coord.getX();
-        int y = coord.getY();
-        int z = coord.getZ();
+        List<BlockPos> cc3 = new LinkedList<>();
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
         ChunkData data = map[x][z];
         if (data.isAdded(y) || data.distance > rangeSqr) return cc3;
         data.add(y);
@@ -317,7 +313,6 @@ public class ChunkFinder {
 
         @Override
         public int compareTo(ChunkData arg0) {
-
             return distance - arg0.distance;
         }
     }

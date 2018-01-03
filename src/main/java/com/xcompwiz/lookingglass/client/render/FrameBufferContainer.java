@@ -1,16 +1,13 @@
 package com.xcompwiz.lookingglass.client.render;
 
 import com.google.common.collect.MapMaker;
+import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.client.proxyworld.WorldView;
-import com.xcompwiz.lookingglass.log.LoggerUtils;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraftforge.client.MinecraftForgeClient;
 import org.lwjgl.opengl.EXTFramebufferObject;
-import org.lwjgl.opengl.EXTPackedDepthStencil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentMap;
@@ -21,7 +18,7 @@ public class FrameBufferContainer {
      * can't detect that the world view is otherwise leaked, though, just when it's gone.
      */
     private static ConcurrentMap<WorldView, FrameBufferContainer> weakfbomap = new MapMaker().weakKeys().makeMap();
-    private static Collection<FrameBufferContainer> framebuffers = new HashSet<FrameBufferContainer>();
+    private static Collection<FrameBufferContainer> framebuffers = new HashSet<>();
 
     public static FrameBufferContainer createNewFramebuffer(WorldView view, int width, int height) {
         FrameBufferContainer fbo = new FrameBufferContainer(width, height);
@@ -42,10 +39,10 @@ public class FrameBufferContainer {
     }
 
     public static synchronized void detectFreedWorldViews() {
-        Collection<FrameBufferContainer> unpairedFBOs = new HashSet<FrameBufferContainer>(framebuffers);
+        Collection<FrameBufferContainer> unpairedFBOs = new HashSet<>(framebuffers);
         unpairedFBOs.removeAll(weakfbomap.values());
         if (unpairedFBOs.isEmpty()) return;
-        LoggerUtils.info("Freeing %d loose framebuffers from expired world views", unpairedFBOs.size());
+        LookingGlass.log.info("Freeing %d loose framebuffers from expired world views", unpairedFBOs.size());
         for (FrameBufferContainer fbo : unpairedFBOs) {
             fbo.release();
         }
@@ -88,7 +85,7 @@ public class FrameBufferContainer {
             framebuffer = 0;
         } catch (Exception e) {
             // Just in case, we make sure we don't crash. Because crashing is bad.
-            LoggerUtils.error("Error while cleaning up a world view frame buffer.");
+            LookingGlass.log.error("Error while cleaning up a world view frame buffer.", e);
         }
     }
 

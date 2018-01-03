@@ -1,13 +1,11 @@
 package com.xcompwiz.lookingglass.network.packet;
 
+import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.client.proxyworld.ProxyWorldManager;
 import com.xcompwiz.lookingglass.client.proxyworld.WorldView;
-import com.xcompwiz.lookingglass.log.LoggerUtils;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -23,20 +21,20 @@ public class PacketWorldInfo extends PacketHandlerBase {
     public static FMLProxyPacket createPacket(int dimension) {
         WorldServer world = DimensionManager.getWorld(0).getMinecraftServer().getWorld(dimension);
         if (world == null) {
-            LoggerUtils.warn("Server-side world for dimension %i is null!", dimension);
+            LookingGlass.log.warn("Server-side world for dimension %i is null!", dimension);
             return null;
         }
-        BlockPos cc = world.provider.getSpawnPoint();
-        int posX = cc.getX();
-        int posY = cc.getY();
-        int posZ = cc.getZ();
+        BlockPos pos = world.provider.getSpawnPoint();
+        int posX = pos.getX();
+        int posY = pos.getY();
+        int posZ = pos.getZ();
         int skylightSubtracted = world.getSkylightSubtracted();
         float thunderingStrength = world.thunderingStrength;
         float rainingStrength = world.rainingStrength;
         long worldTime = world.provider.getWorldTime();
 
         // This line may look like black magic (and, well, it is), but it's actually just returning a class reference for this class. Copy-paste safe.
-        PacketBuffer data = PacketHandlerBase.createDataBuffer((Class<? extends PacketHandlerBase>) new Object() {}.getClass().getEnclosingClass());
+        PacketBuffer data = PacketHandlerBase.createDataBuffer(PacketWorldInfo.class);
 
         data.writeInt(dimension);
         data.writeInt(posX);
@@ -61,17 +59,17 @@ public class PacketWorldInfo extends PacketHandlerBase {
         float rainingStrength = in.readFloat();
         long worldTime = in.readLong();
 
-        WorldClient proxyworld = ProxyWorldManager.getProxyworld(dimension);
+        WorldClient proxyworld = ProxyWorldManager.getProxyWorld(dimension);
 
         if (proxyworld == null) return;
         if (proxyworld.provider.getDimension() != dimension) return;
 
-        BlockPos cc = new BlockPos(posX, posY, posZ);
+        BlockPos pos = new BlockPos(posX, posY, posZ);
         Collection<WorldView> views = ProxyWorldManager.getWorldViews(dimension);
         for (WorldView view : views) {
-            view.updateWorldSpawn(cc);
+            view.updateWorldSpawn(pos);
         }
-        proxyworld.setSpawnPoint(cc);
+        proxyworld.setSpawnPoint(pos);
         proxyworld.setSkylightSubtracted(skylightSubtracted);
         proxyworld.thunderingStrength = thunderingStrength;
         proxyworld.setRainStrength(rainingStrength);

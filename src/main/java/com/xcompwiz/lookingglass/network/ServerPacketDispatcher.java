@@ -1,5 +1,6 @@
 package com.xcompwiz.lookingglass.network;
 
+import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.proxyworld.ModConfigs;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
 import net.minecraft.entity.player.EntityPlayer;
@@ -8,8 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * This class is a variant o nthe vanilla server packet dispatcher. We use it so that we can send data to cleitns in a limited (throttled) manner. This allows
- * server admins to limit how much bandwidth LookingGlass consumes on a server.
+ * This class is a variant on the vanilla server packet dispatcher. We use it so that we can send data to
+ * cleints in a limited (throttled) manner. This allows server admins to limit how much bandwidth LookingGlass
+ * consumes on a server.
  */
 public class ServerPacketDispatcher extends Thread {
 
@@ -19,7 +21,7 @@ public class ServerPacketDispatcher extends Thread {
     private boolean isRunning = true;
 
     private ServerPacketDispatcher() {
-        packets = new LinkedList<PacketHolder>();
+        packets = new LinkedList<>();
     }
 
     public static ServerPacketDispatcher getInstance() {
@@ -36,16 +38,6 @@ public class ServerPacketDispatcher extends Thread {
         synchronized (this) {
             packets.add(new PacketHolder(player, packet));
             notify();
-        }
-    }
-
-    public void removeAllPacketsOf(EntityPlayer player) {
-        synchronized (this) {
-            for (int j = 0; j < packets.size(); ++j) {
-                if (packets.get(j).belongsToPlayer(player)) {
-                    packets.remove(--j);
-                }
-            }
         }
     }
 
@@ -75,7 +67,7 @@ public class ServerPacketDispatcher extends Thread {
                         wait(20);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    LookingGlass.log.warn(e);
                 }
             } else {
                 try {
@@ -83,7 +75,7 @@ public class ServerPacketDispatcher extends Thread {
                         wait(1000);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    LookingGlass.log.warn(e);
                 }
             }
         }

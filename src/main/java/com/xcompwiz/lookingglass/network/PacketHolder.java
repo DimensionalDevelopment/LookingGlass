@@ -7,7 +7,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 /**
  * @author Ken Butler/shadowking97
  */
-// TODO: This class doesn't need to exist, it's just a (Player, Packet) tuple
 public class PacketHolder {
     EntityPlayer player;
     FMLProxyPacket packet;

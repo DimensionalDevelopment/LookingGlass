@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.Tessellator;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
 
-public class RenderUtils {
+public final class RenderUtils {
 
     @SideOnly(Side.CLIENT)
     public static void renderWorldToTexture(float renderTime, int framebuffer, int width, int height) {
@@ -27,7 +27,7 @@ public class RenderUtils {
         int particleBackup = mc.gameSettings.particleSetting;
         boolean anaglyphBackup = mc.gameSettings.anaglyph;
         int renderDistanceBackup = mc.gameSettings.renderDistanceChunks;
-        float FOVbackup = mc.gameSettings.fovSetting;
+        float fovSettingBackup = mc.gameSettings.fovSetting;
 
         //Render world
         try {
@@ -76,7 +76,7 @@ public class RenderUtils {
             mc.gameSettings.particleSetting = particleBackup;
             mc.gameSettings.anaglyph = anaglyphBackup;
             mc.gameSettings.renderDistanceChunks = renderDistanceBackup;
-            mc.gameSettings.fovSetting = FOVbackup;
+            mc.gameSettings.fovSetting = fovSettingBackup;
 
             mc.displayHeight = heightBackup;
             mc.displayWidth = widthBackup;

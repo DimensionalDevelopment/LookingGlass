@@ -28,7 +28,7 @@ public class CameraAnimatorPlayer implements ICameraAnimator {
 
     /**
      * @param camera
-     * @param reference The entity was are using as our reference point, such as our portrait view.
+     * @param reference The entity we are using as our reference point, such as our portrait view.
      * @param player    The entity we are facing. Expected to be the client side player, but could be anything, really.
      */
     public CameraAnimatorPlayer(IViewCamera camera, Entity reference, Entity player) {
@@ -84,10 +84,12 @@ public class CameraAnimatorPlayer implements ICameraAnimator {
         int z = target.getZ();
         if (!camera.chunkExists(x, z)) {
             if (camera.getBlockData().getBlockState(new BlockPos(x, y, z)).getMaterial().blocksMovement()) {
+                //noinspection StatementWithEmptyBody
                 while (y > 0 && camera.getBlockData().getBlockState(new BlockPos(x, --y, z)).getMaterial().blocksMovement());
                 if (y == 0) y = target.getY();
                 else y += 2;
             } else {
+                //noinspection StatementWithEmptyBody
                 while (y < 256 && !camera.getBlockData().getBlockState(new BlockPos(x, ++y, z)).getMaterial().blocksMovement());
                 if (y == 256) y = target.getY();
                 else ++y;

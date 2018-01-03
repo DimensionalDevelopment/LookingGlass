@@ -1,5 +1,6 @@
 package com.xcompwiz.lookingglass.network.packet;
 
+import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.client.proxyworld.ProxyWorldManager;
 import com.xcompwiz.lookingglass.client.proxyworld.WorldView;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -14,36 +15,14 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
 
 import java.io.IOException;
-import java.util.concurrent.Semaphore;
-import java.util.zip.Deflater;
 
 public class PacketChunkInfo extends PacketHandlerBase {
-    private static byte[] inflatearray;
-    private static byte[] dataarray;
-    private static Semaphore deflateGate = new Semaphore(1);
 
-    private static int deflate(byte[] chunkData, byte[] compressedChunkData) {
-        Deflater deflater = new Deflater(-1);
-        if (compressedChunkData == null) return 0;
-        int bytesize = 0;
+    public static FMLProxyPacket createPacket(Chunk chunk, int subid, int dim) {
         try {
-            deflater.setInput(chunkData, 0, chunkData.length);
-            deflater.finish();
-            bytesize = deflater.deflate(compressedChunkData);
-        } finally {
-            deflater.end();
-        }
-        return bytesize;
-    }
-
-    public static FMLProxyPacket createPacket(Chunk chunk, boolean includeinit, int subid, int dim) {
-        try {
-            SPacketChunkData packet = new SPacketChunkData(chunk, 0xFFFF); // TODO
-
-            // This line may look like black magic (and, well, it is), but it's actually just returning a class reference for this class. Copy-paste safe.
-            PacketBuffer data = PacketHandlerBase.createDataBuffer((Class<? extends PacketHandlerBase>) new Object() {}.getClass().getEnclosingClass());
-
+            PacketBuffer data = PacketHandlerBase.createDataBuffer(PacketChunkInfo.class);
             data.writeInt(dim);
+            SPacketChunkData packet = new SPacketChunkData(chunk, 0xFFFF); // TODO don't resend whole chunk
             packet.writePacketData(data);
             return buildPacket(data);
         } catch (IOException e) {
@@ -64,36 +43,32 @@ public class PacketChunkInfo extends PacketHandlerBase {
     }
 
     public void handleChunkData(int dim, SPacketChunkData packet) {
-        //PacketThreadUtil.checkThreadAndEnqueue(packet, this, this.gameController); // TODO!!!
-
-
-        WorldClient proxyworld = ProxyWorldManager.getProxyworld(dim);
-        if (proxyworld == null) return;
-        if (proxyworld.provider.getDimension() != dim) return;
+        WorldClient proxyWorld = ProxyWorldManager.getProxyWorld(dim);
+        if (proxyWorld == null) return;
+        if (proxyWorld.provider.getDimension() != dim) return;
 
         //TODO: Test to see if this first part is even necessary
-        Chunk chunk = proxyworld.getChunkProvider().provideChunk(packet.getChunkX(), packet.getChunkZ());
+        Chunk chunk = proxyWorld.getChunkFromChunkCoords(packet.getChunkX(), packet.getChunkZ());
         if (chunk.isLoaded()) {
-            System.out.println("Skipping loaded chunk at " + packet.getChunkX() + " " + packet.getChunkZ());
+            LookingGlass.log.debug("Skipping loaded chunk at " + packet.getChunkX() + " " + packet.getChunkZ());
         } else {
-            System.out.println("Setting chunk info for " + packet.getChunkX() + " " + packet.getChunkZ());
+            LookingGlass.log.debug("Setting chunk info for " + packet.getChunkX() + " " + packet.getChunkZ());
 
             if (packet.isFullChunk()) {
-                proxyworld.doPreChunk(packet.getChunkX(), packet.getChunkZ(), true);
+                proxyWorld.doPreChunk(packet.getChunkX(), packet.getChunkZ(), true);
             }
 
-            proxyworld.invalidateBlockReceiveRegion(packet.getChunkX() << 4, 0, packet.getChunkZ() << 4, (packet.getChunkX() << 4) + 15, 256, (packet.getChunkZ() << 4) + 15);
-            //Chunk chunk = proxyworld.getChunkFromChunkCoords(packetIn.getChunkX(), packetIn.getChunkZ()); // TODO: or is this better?
+            proxyWorld.invalidateBlockReceiveRegion(packet.getChunkX() << 4, 0, packet.getChunkZ() << 4, (packet.getChunkX() << 4) + 15, 256, (packet.getChunkZ() << 4) + 15);
             chunk.read(packet.getReadBuffer(), packet.getExtractedSize(), packet.isFullChunk());
-            proxyworld.markBlockRangeForRenderUpdate(packet.getChunkX() << 4, 0, packet.getChunkZ() << 4, (packet.getChunkX() << 4) + 15, 256, (packet.getChunkZ() << 4) + 15);
+            proxyWorld.markBlockRangeForRenderUpdate(packet.getChunkX() << 4, 0, packet.getChunkZ() << 4, (packet.getChunkX() << 4) + 15, 256, (packet.getChunkZ() << 4) + 15);
 
-            if (!packet.isFullChunk() || !(proxyworld.provider instanceof WorldProviderSurface)) {
+            if (!packet.isFullChunk() || !(proxyWorld.provider instanceof WorldProviderSurface)) {
                 chunk.resetRelightChecks();
             }
 
             for (NBTTagCompound nbttagcompound : packet.getTileEntityTags()) {
                 BlockPos blockpos = new BlockPos(nbttagcompound.getInteger("x"), nbttagcompound.getInteger("y"), nbttagcompound.getInteger("z"));
-                TileEntity tileentity = proxyworld.getTileEntity(blockpos);
+                TileEntity tileentity = proxyWorld.getTileEntity(blockpos);
 
                 if (tileentity != null) {
                     tileentity.handleUpdateTag(nbttagcompound);
@@ -101,7 +76,7 @@ public class PacketChunkInfo extends PacketHandlerBase {
             }
         }
 
-        for (WorldView activeview : ProxyWorldManager.getWorldViews(proxyworld.provider.getDimension())) { // TODO: dim?
+        for (WorldView activeview : ProxyWorldManager.getWorldViews(proxyWorld.provider.getDimension())) { // TODO: dim?
             activeview.onChunkReceived(packet.getChunkX(), packet.getChunkZ());
         }
     }

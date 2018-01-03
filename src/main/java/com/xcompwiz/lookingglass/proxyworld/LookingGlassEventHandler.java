@@ -1,7 +1,7 @@
 package com.xcompwiz.lookingglass.proxyworld;
 
+import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.client.proxyworld.ProxyWorldManager;
-import com.xcompwiz.lookingglass.log.LoggerUtils;
 import com.xcompwiz.lookingglass.render.PerspectiveRenderManager;
 import com.xcompwiz.lookingglass.render.WorldViewRenderManager;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -43,7 +43,7 @@ public class LookingGlassEventHandler {
         try {
             stream = new PrintStream(logfile);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            LookingGlass.log.warn(e);
         } finally {
             printstream = stream;
         }
@@ -77,7 +77,7 @@ public class LookingGlassEventHandler {
 
         // Tick loop for our own worlds.
         WorldClient worldBackup = mc.world;
-        for (WorldClient proxyworld : ProxyWorldManager.getProxyworlds()) {
+        for (WorldClient proxyworld : ProxyWorldManager.getProxyWorlds()) {
             if (proxyworld.getLastLightningBolt() > 0) proxyworld.setLastLightningBolt(proxyworld.getLastLightningBolt() - 1);
             if (worldBackup == proxyworld) continue; // This prevents us from double ticking the client world.
             try {
@@ -85,7 +85,7 @@ public class LookingGlassEventHandler {
                 //TODO: relays for views (renderGlobal and effectRenderer) (See ProxyWorld.makeFireworks ln23)
                 proxyworld.tick();
             } catch (Exception e) {
-                LoggerUtils.error("Client Proxy Dim had error while ticking: %s", e.getLocalizedMessage());
+                LookingGlass.log.error("Client Proxy Dim had error while ticking: %s", e);
                 e.printStackTrace(printstream);
             }
         }
@@ -101,12 +101,9 @@ public class LookingGlassEventHandler {
             // Anything we need to render for the current frame should happen either during or before the main world render
             // Here we call the renderer for "live portal" renders.
             PerspectiveRenderManager.onRenderTick(printstream);
-            return;
-        }
-        if (event.phase == TickEvent.Phase.END) {
+        } else if (event.phase == TickEvent.Phase.END) {
             // We render the world views at the end of the render tick.
             WorldViewRenderManager.onRenderTick(printstream);
-            return;
         }
     }
 

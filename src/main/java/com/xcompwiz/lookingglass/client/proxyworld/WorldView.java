@@ -17,9 +17,9 @@ import net.minecraft.util.math.MathHelper;
 @SideOnly(Side.CLIENT)
 public class WorldView implements IWorldView {
     private WorldClient world;
-    public final BlockPos coords;
+    public final BlockPos pos;
     public final EntityCamera camera;
-    public final IViewCamera camerawrapper;
+    public final IViewCamera cameraWrapper;
 
     public final int width;
     public final int height;
@@ -27,20 +27,20 @@ public class WorldView implements IWorldView {
     private boolean update;
     private boolean ready;
     private boolean hasChunks;
-    private long last_render_time = -1;
+    private long lastRenderTime = -1;
 
     private RenderGlobal renderGlobal;
     private ParticleManager effectRenderer;
 
     private FrameBufferContainer fbo;
 
-    public WorldView(WorldClient world, BlockPos coords, int width, int height) {
+    public WorldView(WorldClient world, BlockPos pos, int width, int height) {
         this.width = width;
         this.height = height;
         this.world = world;
-        this.coords = coords;
-        camera = new EntityCamera(world, coords);
-        camerawrapper = new ViewCameraImpl(camera);
+        this.pos = pos;
+        camera = new EntityCamera(world, pos);
+        cameraWrapper = new ViewCameraImpl(camera);
         renderGlobal = new RenderGlobal(Minecraft.getMinecraft());
         effectRenderer = new ParticleManager(world, Minecraft.getMinecraft().getTextureManager());
         // Technically speaking, this is poor practice as it leaks a reference to the view before it's done constructing.
@@ -58,11 +58,11 @@ public class WorldView implements IWorldView {
 
     @Override
     public boolean isReady() {
-        return fbo == null ? false : ready;
+        return fbo != null && ready;
     }
 
     public boolean hasChunks() {
-        return fbo == null ? false : hasChunks;
+        return fbo != null && hasChunks;
     }
 
     @Override
@@ -103,20 +103,20 @@ public class WorldView implements IWorldView {
         return false;
     }
 
-    public void onChunkReceived(int cx, int cz) {
+    public void onChunkReceived(int x, int z) {
         hasChunks = true;
-        int cam_cx = MathHelper.floor(camera.posX) >> 4;
-        int cam_cz = MathHelper.floor(camera.posZ) >> 4;
-        if (cam_cx >= cx - 1 && cam_cx <= cx + 1 && cam_cz > cz - 1 && cam_cz < cz + 1) camera.refreshAnimator();
+        int cameraX = MathHelper.floor(camera.posX) >> 4;
+        int cameraZ = MathHelper.floor(camera.posZ) >> 4;
+        if (cameraX >= x - 1 && cameraX <= x + 1 && cameraZ > z - 1 && cameraZ < z + 1) camera.refreshAnimator();
     }
 
-    public void updateWorldSpawn(BlockPos cc) {
-        camera.updateWorldSpawn(cc);
+    public void updateWorldSpawn(BlockPos pos) {
+        camera.updateWorldSpawn(pos);
     }
 
-    public void startRender(long renderT) {
-        if (last_render_time > 0) camera.tick(renderT - last_render_time);
-        last_render_time = renderT;
+    public void startRender(long renderTime) {
+        if (lastRenderTime > 0) camera.tick(renderTime - lastRenderTime);
+        lastRenderTime = renderTime;
     }
 
     @Override
@@ -126,7 +126,7 @@ public class WorldView implements IWorldView {
 
     @Override
     public IViewCamera getCamera() {
-        return camerawrapper;
+        return cameraWrapper;
     }
 
     /**
@@ -137,13 +137,13 @@ public class WorldView implements IWorldView {
      * @param world The new world
      */
     public void replaceWorldObject(WorldClient world) {
-        world = world;
+        this.world = world;
         camera.world = world;
         effectRenderer.clearEffects(world);
         renderGlobal.setWorldAndLoadRenderers(world);
     }
 
-    public WorldClient getWorldObj() {
+    public WorldClient getWorld() {
         return world;
     }
 }

@@ -1,6 +1,6 @@
 package com.xcompwiz.lookingglass.network;
 
-import com.xcompwiz.lookingglass.log.LoggerUtils;
+import com.xcompwiz.lookingglass.LookingGlass;
 import com.xcompwiz.lookingglass.network.packet.PacketHandlerBase;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -9,7 +9,6 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetHandlerPlayServer;
@@ -22,8 +21,8 @@ public class LookingGlassPacketManager {
     public static final String CHANNEL = "lookingglass";
     public static FMLEventChannel bus;
 
-    private static HashMap<Byte, PacketHandlerBase> packethandlers = new HashMap<Byte, PacketHandlerBase>();
-    private static HashMap<Class<? extends PacketHandlerBase>, Byte> idmap = new HashMap<Class<? extends PacketHandlerBase>, Byte>();
+    private static HashMap<Byte, PacketHandlerBase> packethandlers = new HashMap<>();
+    private static HashMap<Class<? extends PacketHandlerBase>, Byte> idmap = new HashMap<>();
 
     /**
      * Register a new packet handler to the manager. We use pre-defined packet ids to avoid mismatched packet ids across client-server communications.
@@ -79,14 +78,10 @@ public class LookingGlassPacketManager {
                 }
                 handler.handle(data, player);
             } catch (Exception e) {
-                LoggerUtils.warn("PacketHandler: Failed to handle packet type " + type);
-                LoggerUtils.warn(e.toString());
-                e.printStackTrace();
+                LookingGlass.log.warn("PacketHandler: Failed to handle packet type " + type, e);
             }
         } catch (Exception e) {
-            LoggerUtils.warn("PacketHandler: Failed to read packet");
-            LoggerUtils.warn(e.toString());
-            e.printStackTrace();
+            LookingGlass.log.warn("PacketHandler: Failed to read packet", e);
         }
     }
 }

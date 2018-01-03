@@ -3,7 +3,7 @@ package com.xcompwiz.lookingglass.proxyworld;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
-public class ModConfigs {
+public final class ModConfigs {
     private static final String CATAGORY_SERVER = "server";
 
     public static boolean disabled = false;

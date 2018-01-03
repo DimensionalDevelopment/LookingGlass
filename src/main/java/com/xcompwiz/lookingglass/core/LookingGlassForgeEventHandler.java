@@ -10,8 +10,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
-import java.util.List;
-
 public class LookingGlassForgeEventHandler {
 
     @SideOnly(Side.CLIENT)

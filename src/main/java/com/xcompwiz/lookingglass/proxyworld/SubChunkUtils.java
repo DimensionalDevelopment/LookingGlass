@@ -2,7 +2,7 @@ package com.xcompwiz.lookingglass.proxyworld;
 
 import net.minecraft.util.math.BlockPos;
 
-public class SubChunkUtils {
+public final class SubChunkUtils {
     public static boolean withinDistance(BlockPos c1, int x, int y, int z, int distance) {
         return distance * distance >= c1.distanceSq(x, y, z);
     }

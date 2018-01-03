@@ -3,7 +3,6 @@ package com.xcompwiz.lookingglass.network.packet;
 import com.xcompwiz.lookingglass.network.LookingGlassPacketManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
 

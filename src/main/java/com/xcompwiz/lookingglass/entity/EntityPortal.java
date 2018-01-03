@@ -28,7 +28,7 @@ public class EntityPortal extends Entity {
     private long lifetime = 1000L;
 
     @SideOnly(Side.CLIENT)
-    private IWorldView activeview;
+    private IWorldView activeView;
 
     public EntityPortal(World world) {
         super(world);
@@ -63,8 +63,8 @@ public class EntityPortal extends Entity {
 
     @Override
     protected void entityInit() {
-        this.dataManager.register(TARGET_DIM, 0);
-        this.dataManager.register(TARGET_POS, new BlockPos(0, 64, 0));
+        dataManager.register(TARGET_DIM, 0);
+        dataManager.register(TARGET_POS, new BlockPos(0, 64, 0));
     }
 
     @Override
@@ -88,20 +88,20 @@ public class EntityPortal extends Entity {
     @SideOnly(Side.CLIENT)
     public IWorldView getActiveView() {
         if (!world.isRemote) return null;
-        if (activeview == null) {
-            activeview = ProxyWorldManager.createWorldView(getTarget(), getTargetPos(), 160, 240);
-            if (activeview != null) {
+        if (activeView == null) {
+            activeView = ProxyWorldManager.createWorldView(getTarget(), getTargetPos(), 160, 240);
+            if (activeView != null) {
                 // We set the player animator on our portrait. This makes the view move a little depending on how the user looks at it. Not quite a replacement for portal rendering, but cool looking anyway.
-                activeview.setAnimator(new CameraAnimatorPlayer(activeview.getCamera(), this, Minecraft.getMinecraft().player));
+                activeView.setAnimator(new CameraAnimatorPlayer(activeView.getCamera(), this, Minecraft.getMinecraft().player));
             }
         }
-        return activeview;
+        return activeView;
     }
 
     @SideOnly(Side.CLIENT)
     public void releaseActiveView() {
-        if (activeview != null) ProxyWorldManager.destroyWorldView((WorldView) activeview);
-        activeview = null;
+        if (activeView != null) ProxyWorldManager.destroyWorldView((WorldView) activeView);
+        activeView = null;
     }
 
     @Override

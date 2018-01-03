@@ -12,7 +12,7 @@ public class ChunkFinderManager {
     private List<ChunkFinder> finders;
 
     public ChunkFinderManager() {
-        finders = new LinkedList<ChunkFinder>();
+        finders = new LinkedList<>();
     }
 
     public void addFinder(ChunkFinder f) {

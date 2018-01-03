@@ -1,16 +1,21 @@
+{
+"modListVersion": 2,
+"modList":
 [
 {
-  "modid": "LookingGlass",
+  "modid": "lookingglass",
   "name": "Looking Glass",
   "description": "\"In another moment Alice was through the glass, and had jumped lightly down into the Looking-glass room.\" - Through the Looking-Glass, and What Alice Found There; Lewis Carroll",
   "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "http://xcompwiz.com",
+  "mcversion": "1.12.2",
+  "url": "https://github.com/DimensionalDevelopment/LookingGlass",
   "updateUrl": "",
-  "authorList": ["XCompWiz"],
+  "authorList": ["XCompWiz", "Runemoro"],
   "credits": "shadowking97, for following the plan in my head",
   "logoFile": "/logo.png",
   "screenshots": [],
-  "dependencies": []
+  "dependencies": ["forge"],
+  "parent":""
 }
 ]
+}
