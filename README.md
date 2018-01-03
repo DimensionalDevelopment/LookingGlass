@@ -11,10 +11,10 @@ It is advised that you work from a released API jar, rather than from the source
 #### Maven Repo
 ```
 repositories {
-	maven {
-		name "xcompwiz"
-		url "http://maven.xcompwiz.com"
-	}
+    maven {
+        name "xcompwiz"
+        url "http://maven.xcompwiz.com"
+    }
 }
 dependencies {
     compile "com.xcompwiz.lookingglass:lookingglass:0.2.0.00:dev"

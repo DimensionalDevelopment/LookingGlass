@@ -1,63 +1,44 @@
 package com.xcompwiz.lookingglass.command;
 
+import com.xcompwiz.lookingglass.entity.EntityPortal;
+import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.DimensionManager;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 
-import com.xcompwiz.lookingglass.entity.EntityPortal;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CommandCreateView extends CommandBaseAdv {
-	@Override
-	public String getCommandName() {
-		return "lg-viewdim";
-	}
+public class CommandCreateView extends CommandBase {
+    @Override
+    public String getName() {
+        return "createview";
+    }
 
-	@Override
-	public String getCommandUsage(ICommandSender par1ICommandSender) {
-		return "/" + this.getCommandName() + " targetdim [dim, x, y, z]";
-	}
+    @Override
+    public List<String> getAliases() {
+        List<String> aliases = new ArrayList<>();
+        aliases.add("lg");
+        return aliases;
+    }
 
-	@Override
-	public void processCommand(ICommandSender agent, String[] args) {
-		int targetdim = 0;
-		Integer dim = null;
-		ChunkCoordinates coords = null;
+    @Override
+    public String getUsage(ICommandSender sender) {
+        return "/" + getName() + " dim x y z";
+    }
 
-		//XXX: Set Coordinates of view location?
-		if (args.length > 0) {
-			String sTarget = args[0];
-			targetdim = parseInt(agent, sTarget);
-		} else {
-			throw new WrongUsageException("Could not parse command.");
-		}
-		if (args.length > 4) {
-			dim = parseInt(agent, args[1]);
-			Entity caller = null;
-			try {
-				caller = getCommandSenderAsPlayer(agent);
-			} catch (Exception e) {
-			}
-			int x = (int) handleRelativeNumber(agent, (caller != null ? caller.posX : 0), args[2]);
-			int y = (int) handleRelativeNumber(agent, (caller != null ? caller.posY : 0), args[3], 0, 0);
-			int z = (int) handleRelativeNumber(agent, (caller != null ? caller.posZ : 0), args[4]);
-			coords = new ChunkCoordinates(x, y, z);
-		}
-		if (coords == null) {
-			dim = getSenderDimension(agent);
-			coords = agent.getPlayerCoordinates();
-		}
-		if (coords == null) throw new WrongUsageException("Location Required");
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length != 4) throw new WrongUsageException("Could not parse command.");
 
-		WorldServer worldObj = DimensionManager.getWorld(dim);
-		if (worldObj == null) { throw new CommandException("The target world is not loaded"); }
+        int targetDim = parseInt(args[0]);
+        BlockPos targetPos = new BlockPos(parseInt(args[1]), parseInt(args[2]), parseInt(args[3]));
 
-		EntityPortal portal = new EntityPortal(worldObj, targetdim, coords.posX, coords.posY, coords.posZ);
-		worldObj.spawnEntityInWorld(portal);
+        EntityPortal portal = new EntityPortal(sender.getEntityWorld(), sender.getPosition(), targetDim, targetPos);
+        sender.getEntityWorld().spawnEntity(portal);
 
-		sendToAdmins(agent, "A window to dimension " + targetdim + " has been created.", new Object[0]);
-	}
+        notifyCommandListener(sender, this, "A window to dimension " + targetDim + " at " + targetPos + " has been created.");
+    }
 }
